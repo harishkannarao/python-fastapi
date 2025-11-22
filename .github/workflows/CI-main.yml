@@ -1,0 +1,30 @@
+name: 'CI-main'
+
+on:
+  push:
+    branches:
+      - main
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  master-build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: '1'
+        ref: 'main'
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.12
+    - name: Install dependencies
+      run: |
+        python --version
+        pip --version
+        make --version
+        make init_ci
+    - name: Lint with flake8
+      run: |
+        make flake8
