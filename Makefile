@@ -28,3 +28,6 @@ flake8:
 
 run_all:
 	make init ruff flake8
+
+docker:
+	docker build --pull -t python-fastapi -f Dockerfile .

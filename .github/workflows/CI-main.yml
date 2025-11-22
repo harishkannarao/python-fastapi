@@ -19,12 +19,18 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.12
-    - name: Install dependencies
+    - name: Verify build dependencies
       run: |
         python --version
         pip --version
         make --version
+        docker --version
+    - name: Install app dependencies
+      run: |
         make init_ci
     - name: Lint with flake8
       run: |
         make flake8
+    - name: Build docker image
+      run: |
+        make docker
