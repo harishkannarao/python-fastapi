@@ -17,3 +17,11 @@ Repository to learn and explore API and Backend service with Python using FastAP
 ### Initialise/update dependencies
     
     make init_dependencies
+
+### Run in development mode
+
+    make fast_dev
+
+### Run in production mode
+
+    make fast_run
