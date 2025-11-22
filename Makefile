@@ -10,6 +10,12 @@ init_ci:
 	pip install uv --upgrade
 	uv sync --locked
 
+fast_dev:
+	uv run fastapi dev app/main.py
+
+fast_run:
+	uv run fastapi run app/main.py
+
 upgrade:
 	uv sync --upgrade
 
