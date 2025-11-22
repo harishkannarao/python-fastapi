@@ -1,0 +1,20 @@
+[project]
+name = "python-fastapi"
+version = "0.1.0"
+description = "Repository to learn and explore API and Backend service with Python using FastAPI Framework"
+requires-python = ">=3.12"
+dependencies = [
+    "requests",
+]
+
+[dependency-groups]
+dev = [
+    "flake8",
+    "pytest",
+    "pytest-mock",
+    "pytest-html",
+    "pytest-asyncio",
+    "assertpy",
+    "ruff",
+    "retrying",
+]
