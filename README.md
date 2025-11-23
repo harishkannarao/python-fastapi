@@ -42,6 +42,6 @@ Create docker image
 
 Run the created docker image
 
-    docker run -it --rm -p 8000:80 python-fastapi
+    docker run -it --rm --env PORT=8000 -p 8000:8000 python-fastapi
 
     http://localhost:8000

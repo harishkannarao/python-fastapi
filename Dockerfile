@@ -10,6 +10,8 @@ COPY ./.python-version /code/.python-version
 
 RUN uv sync --locked
 
+ENV PORT=80
+
 COPY ./app /code/app
 
-CMD ["uv", "run", "fastapi", "run", "app/main.py", "--proxy-headers", "--port", "80"]
+CMD ["uv", "run", "fastapi", "run", "app/main.py", "--proxy-headers"]
