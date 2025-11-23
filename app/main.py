@@ -2,13 +2,13 @@ from fastapi import FastAPI
 from app.config import settings
 from app.routers.sample import router as sample_router
 
-sub_app = FastAPI()
+context = FastAPI()
 
-sub_app.include_router(sample_router)
+context.include_router(sample_router)
 
 app = FastAPI()
 
-app.mount(settings.app_context, sub_app)
+app.mount(settings.app_context, context)
 
 
 @app.get("/")
@@ -16,6 +16,6 @@ async def root():
     return {"message": "Hello Bigger Applications!"}
 
 
-@sub_app.get("/")
-async def sub_root():
+@context.get("/")
+async def context_root():
     return {"message": "Hello Sub Application!"}
