@@ -27,10 +27,22 @@ jobs:
         docker --version
     - name: Install app dependencies
       run: |
-        make init_ci
-    - name: Lint with flake8
+        make -l init_ci
+    - name: Run all
       run: |
-        make flake8
+        make -l run_all
+    - name: Archive unit test report
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}
+      with:
+        name: tests_integration_report
+        path: tests_integration_report.html
+    - name: Archive integration test report
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}
+      with:
+        name: tests_integration_report
+        path: tests_integration_report.html
     - name: Build docker image
       run: |
         make docker

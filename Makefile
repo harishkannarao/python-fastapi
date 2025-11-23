@@ -10,6 +10,12 @@ init_ci:
 	pip install uv --upgrade
 	uv sync --locked
 
+tests_unit:
+	uv run pytest tests_unit --html=tests_unit_report.html --self-contained-html
+
+tests_integration:
+	uv run pytest tests_integration --html=tests_integration_report.html --self-contained-html
+
 fast_dev:
 	uv run fastapi dev app/main.py
 
@@ -27,7 +33,7 @@ flake8:
 	uv run flake8 --ignore=E501 --exclude=.venv,.git # ignore max line length
 
 run_all:
-	make init ruff flake8
+	make init ruff flake8 tests_unit tests_integration
 
 docker:
 	docker build --pull -t python-fastapi -f Dockerfile .

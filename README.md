@@ -12,11 +12,11 @@ Repository to learn and explore API and Backend service with Python using FastAP
 
 ### Default command
 
-    make
+    make -l
 
 ### Initialise/update dependencies
     
-    make init_dependencies
+    make -l init_dependencies
 
 ### Run in development mode
 
