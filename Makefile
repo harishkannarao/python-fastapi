@@ -1,3 +1,4 @@
+.PHONY: tests_unit tests_integration
 .DEFAULT_GOAL := run_all
 
 init:
