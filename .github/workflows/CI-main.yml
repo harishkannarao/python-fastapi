@@ -35,8 +35,8 @@ jobs:
       uses: actions/upload-artifact@v4
       if: ${{ always() }}
       with:
-        name: tests_integration_report
-        path: tests_integration_report.html
+        name: tests_unit_report
+        path: tests_unit_report.html
     - name: Archive integration test report
       uses: actions/upload-artifact@v4
       if: ${{ always() }}
