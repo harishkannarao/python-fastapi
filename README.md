@@ -8,6 +8,10 @@ Repository to learn and explore API and Backend service with Python using FastAP
 * git `latest`
 * pycharm `latest`
 
+## IntelliJ pytest setup
+
+    settings -> Python -> Integrated Tools -> Testing -> Default test runner -> pytest
+
 ## Commands
 
 ### Default command
