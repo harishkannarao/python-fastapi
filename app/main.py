@@ -4,6 +4,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.config import settings
 from app.middleware.process_time import ProcessTimeMiddleware
+from app.middleware.request_id import RequestIdMiddleware
 from app.routers.sample import router as sample_router
 
 context = FastAPI(openapi_url=settings.app_open_api_url)
@@ -16,6 +17,9 @@ app.mount(settings.app_context, context)
 
 app.add_middleware(
     BaseHTTPMiddleware, dispatch=ProcessTimeMiddleware(header_name="x-process-time")
+)
+app.add_middleware(
+    BaseHTTPMiddleware, dispatch=RequestIdMiddleware(header_name="x-request-id")
 )
 
 
