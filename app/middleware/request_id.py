@@ -10,7 +10,7 @@ class RequestIdMiddleware:
         self.header_name = header_name
 
     async def __call__(
-            self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
         request_id: str | None = request.headers.get(self.header_name)
         if request_id is None:
@@ -27,7 +27,7 @@ class RequestIdMiddleware:
         try:
             response = await call_next(request)
             response.headers[self.header_name] = request_id
-            request_context['status'] = response.status_code
+            request_context["status"] = response.status_code
             structlog.contextvars.bind_contextvars(status=response.status_code)
         finally:
             logger.info("Request finished", extra=request_context)

@@ -13,7 +13,9 @@ def test_new_request_id_when_not_supplied_in_request(test_client: TestClient):
             request_id = response.headers.get("x-request-id")
             assert len(captured_logs) > 0
             filtered_logs = list(
-                filter(lambda entry: entry["event"] == "Request finished", captured_logs)
+                filter(
+                    lambda entry: entry["event"] == "Request finished", captured_logs
+                )
             )
             assert len(filtered_logs) >= 1
             assert filtered_logs[0]["extra"]["request_id"] == request_id
@@ -31,7 +33,9 @@ def test_returns_request_id_when_supplied_in_request(test_client: TestClient):
             assert response.headers.get("x-request-id") == request_id
             assert len(captured_logs) > 0
             filtered_logs = list(
-                filter(lambda entry: entry["event"] == "Request finished", captured_logs)
+                filter(
+                    lambda entry: entry["event"] == "Request finished", captured_logs
+                )
             )
             assert len(filtered_logs) >= 1
             assert filtered_logs[0]["extra"]["request_id"] == request_id
