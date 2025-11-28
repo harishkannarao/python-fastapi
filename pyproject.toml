@@ -5,6 +5,7 @@ description = "Repository to learn and explore API and Backend service with Pyth
 requires-python = ">=3.12"
 dependencies = [
     "fastapi[all]",
+    "structlog",
 ]
 
 [dependency-groups]
