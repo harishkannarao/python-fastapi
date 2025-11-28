@@ -15,18 +15,20 @@ class RequestIdMiddleware:
         request_id: str | None = request.headers.get(self.header_name)
         if request_id is None:
             request_id = str(uuid.uuid4())
-        structlog.contextvars.bind_contextvars(
-            request_method=request.method,
-            request_path=request.url.path,
-            request_id=request_id,
-        )
+
+        request_context = {
+            "request_id": request_id,
+            "request_method": request.method,
+            "request_path": request.url.path,
+        }
+        structlog.contextvars.bind_contextvars(**request_context)
         logger = structlog.get_logger()
-        logger.info("Request started")
+        logger.info("Request started", extra=request_context)
         try:
             response = await call_next(request)
             response.headers[self.header_name] = request_id
             structlog.contextvars.bind_contextvars(status=response.status_code)
         finally:
-            logger.info("Request finished", extra={"request_id": request_id})
+            logger.info("Request finished", extra=request_context)
             structlog.contextvars.clear_contextvars()
         return response
