@@ -19,9 +19,9 @@ def test_client() -> Generator[TestClient, None, None]:
 
 @pytest.fixture
 def disable_open_api(monkeypatch) -> Generator[config.Settings, None, None]:
-    original_value = os.getenv("APP_OPEN_API_URL")
-    new_value = ""
     name = "APP_OPEN_API_URL"
+    original_value = os.getenv(name)
+    new_value = ""
     # set new value, reload module and yield setting
     yield patch_env_var(monkeypatch, name, new_value)
     # reset to original value and reload module
