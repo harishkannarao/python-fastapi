@@ -1,6 +1,6 @@
 import os
 from importlib import reload
-from typing import Generator
+from typing import Generator, MutableMapping, Any
 
 import pytest
 import structlog
@@ -37,7 +37,7 @@ def patch_env_var(monkeypatch, name: str, value: str | None) -> config.Settings:
 
 
 @pytest.fixture
-def captured_logs():
+def captured_logs() -> Generator[list[MutableMapping[str, Any]], None, None]:
     with structlog.testing.capture_logs() as captured_logs:
         yield captured_logs
         for log in captured_logs:
