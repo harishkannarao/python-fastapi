@@ -1,0 +1,17 @@
+networks:
+  main:
+    name: python-fastapi-network
+
+services:
+  python-fastapi-postgres:
+    container_name: python-fastapi-postgres
+    image: "public.ecr.aws/docker/library/postgres:18-alpine"
+    ports:
+      - "5432:5432"
+    environment:
+      - "POSTGRES_USER=myuser"
+      - "POSTGRES_PASSWORD=superpassword"
+    networks:
+      main:
+        aliases:
+          - python-fastapi-postgres

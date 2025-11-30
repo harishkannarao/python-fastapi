@@ -22,6 +22,23 @@ Repository to learn and explore API and Backend service with Python using FastAP
     
     make -l init_dependencies
 
+### Run postgres database server using docker compose
+
+Docker dependencies needs to be started using docker compose before running the build or starting the api
+
+##### Pull the latest images of docker services
+
+    docker compose -f docker-compose.yml pull
+
+##### Start docker services
+
+    docker compose -f docker-compose.yml up --build -d
+
+##### Stop docker services
+
+    docker compose -f docker-compose.yml down -v
+    
+
 ### Run in development mode
 
     make fast_dev
