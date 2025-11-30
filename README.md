@@ -59,6 +59,6 @@ Create docker image
 
 Run the created docker image
 
-    docker run -it --rm --env PORT=8000 -p 8000:8000 python-fastapi
+    docker run --network=python-fastapi-network -e 'APP_DB_HOST=python-fastapi-postgres' -it --rm --env PORT=8000 -p 8000:8000 python-fastapi
 
     http://localhost:8000
