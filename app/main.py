@@ -2,8 +2,10 @@ import structlog
 import uvicorn
 from fastapi import FastAPI
 from starlette.middleware.base import BaseHTTPMiddleware
+from contextlib import asynccontextmanager
 
 from app.config import settings
+from app.db_schema_migrations.yoyo_migration import apply_db_migrations
 from app.logging.logging_config import setup_logging
 from app.middleware.process_time import ProcessTimeMiddleware
 from app.middleware.request_id import RequestIdMiddleware
@@ -16,7 +18,15 @@ context = FastAPI(openapi_url=settings.app_open_api_url)
 
 context.include_router(sample_router)
 
-app = FastAPI(openapi_url=settings.app_open_api_url)
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    if settings.app_db_migration_enabled:
+        apply_db_migrations()
+    yield
+
+
+app = FastAPI(openapi_url=settings.app_open_api_url, lifespan=lifespan)
 
 app.mount(settings.app_context, context)
 

@@ -11,17 +11,17 @@ init_ci:
 	pip install uv --upgrade
 	uv sync --locked
 
-tests_unit:
-	uv run pytest tests_unit --html=tests_unit_report.html --self-contained-html
-
-tests_integration:
-	uv run pytest tests_integration --html=tests_integration_report.html --self-contained-html
-
 fast_dev:
 	uv run fastapi dev app/main.py
 
 fast_run:
 	uv run fastapi run app/main.py
+
+tests_unit:
+	uv run pytest tests_unit --html=tests_unit_report.html --self-contained-html
+
+tests_integration:
+	uv run pytest tests_integration --html=tests_integration_report.html --self-contained-html
 
 upgrade:
 	uv sync --upgrade

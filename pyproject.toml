@@ -6,6 +6,8 @@ requires-python = ">=3.12"
 dependencies = [
     "fastapi[all]",
     "structlog",
+    "psycopg2-binary",
+    "yoyo-migrations",
 ]
 
 [dependency-groups]
