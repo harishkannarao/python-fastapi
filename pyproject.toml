@@ -8,6 +8,7 @@ dependencies = [
     "structlog",
     "psycopg2-binary",
     "yoyo-migrations",
+    "testcontainers[postgresql]",
 ]
 
 [dependency-groups]

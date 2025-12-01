@@ -1,6 +1,7 @@
 import os
 from importlib import reload
 from typing import Generator, Any, MutableMapping
+from testcontainers.postgres import PostgresContainer
 
 import pytest
 import structlog
@@ -10,10 +11,22 @@ import app.config as config
 import app.main as main
 
 
+@pytest.fixture(scope="session")
+def postgres_container() -> Generator[PostgresContainer, None, None]:
+    with PostgresContainer(image="postgres:18-alpine") as postgres:
+        yield postgres
+
+
 @pytest.fixture
 def test_client(
     disable_db_migrations: config.Settings,
+    postgres_container: PostgresContainer,
 ) -> Generator[TestClient, None, None]:
+    print(postgres_container.get_container_host_ip())
+    print(postgres_container.get_exposed_port(5432))
+    print(postgres_container.username)
+    print(postgres_container.password)
+    print(postgres_container.dbname)
     app = reload(main).app
     with TestClient(app) as client:
         yield client

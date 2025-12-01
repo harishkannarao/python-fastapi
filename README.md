@@ -16,11 +16,14 @@ Repository to learn and explore API and Backend service with Python using FastAP
 
 ### Default command
 
-    make -l
+    make
+
+Note:
+Set the environment variable `TESTCONTAINERS_RYUK_DISABLED` as `true` to disable RYUK (TestContainer) while running the build
 
 ### Initialise/update dependencies
     
-    make -l init_dependencies
+    make init_dependencies
 
 ### Run postgres database server using docker compose
 
