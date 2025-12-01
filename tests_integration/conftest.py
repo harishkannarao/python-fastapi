@@ -11,14 +11,22 @@ import app.main as main
 
 
 @pytest.fixture
-def test_client(monkeypatch) -> Generator[TestClient, None, None]:
-    name = "APP_DB_MIGRATION_ENABLED"
-    original_value = os.getenv(name)
-    new_value = "False"
-    patch_env_var(monkeypatch, name, new_value)
+def test_client(
+    disable_db_migrations: config.Settings,
+) -> Generator[TestClient, None, None]:
     app = reload(main).app
     with TestClient(app) as client:
         yield client
+
+
+@pytest.fixture
+def disable_db_migrations(monkeypatch) -> Generator[config.Settings, None, None]:
+    name = "APP_DB_MIGRATION_ENABLED"
+    original_value = os.getenv(name)
+    new_value = "False"
+    # set new value, reload module and yield setting
+    yield patch_env_var(monkeypatch, name, new_value)
+    # reset to original value and reload module
     patch_env_var(monkeypatch, name, original_value)
 
 
