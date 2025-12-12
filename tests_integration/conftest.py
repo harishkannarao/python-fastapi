@@ -1,11 +1,13 @@
 import os
 from importlib import reload
 from typing import Generator, Any, MutableMapping
-from testcontainers.postgres import PostgresContainer
 
 import pytest
 import structlog
 from fastapi.testclient import TestClient
+from testcontainers.core.container import DockerContainer
+from testcontainers.core.waiting_utils import wait_for_logs
+from testcontainers.postgres import PostgresContainer
 
 import app.config as config
 import app.main as main
@@ -17,16 +19,34 @@ def postgres_container() -> Generator[PostgresContainer, None, None]:
         yield postgres
 
 
+@pytest.fixture(scope="session")
+def postgres_docker_container() -> Generator[DockerContainer, None, None]:
+    env_vars: dict[str, str] = {
+        "POSTGRES_USER": "myuser",
+        "POSTGRES_PASSWORD": "superpassword",
+    }
+    with DockerContainer(
+        image="public.ecr.aws/docker/library/postgres:18-alpine",
+        env=env_vars,
+        ports=[5432],
+    ) as container:
+        wait_for_logs(container, "server started")
+        yield container
+
+
 @pytest.fixture
 def test_client(
     disable_db_migrations: config.Settings,
     postgres_container: PostgresContainer,
+    postgres_docker_container: DockerContainer,
 ) -> Generator[TestClient, None, None]:
     print(postgres_container.get_container_host_ip())
     print(postgres_container.get_exposed_port(5432))
     print(postgres_container.username)
     print(postgres_container.password)
     print(postgres_container.dbname)
+    print(postgres_docker_container.get_container_host_ip())
+    print(postgres_docker_container.get_exposed_port(5432))
     app = reload(main).app
     with TestClient(app) as client:
         yield client
