@@ -7,16 +7,9 @@ import structlog
 from fastapi.testclient import TestClient
 from testcontainers.core.container import DockerContainer
 from testcontainers.core.waiting_utils import wait_for_logs
-from testcontainers.postgres import PostgresContainer
 
 import app.config as config
 import app.main as main
-
-
-@pytest.fixture(scope="session")
-def postgres_container() -> Generator[PostgresContainer, None, None]:
-    with PostgresContainer(image="postgres:18-alpine") as postgres:
-        yield postgres
 
 
 @pytest.fixture(scope="session")
@@ -36,27 +29,34 @@ def postgres_docker_container() -> Generator[DockerContainer, None, None]:
 
 @pytest.fixture
 def test_client(
-    disable_db_migrations: config.Settings,
-    postgres_container: PostgresContainer,
-    postgres_docker_container: DockerContainer,
+    change_posgtres_db_host: config.Settings,
+    change_posgtres_db_port: config.Settings,
 ) -> Generator[TestClient, None, None]:
-    print(postgres_container.get_container_host_ip())
-    print(postgres_container.get_exposed_port(5432))
-    print(postgres_container.username)
-    print(postgres_container.password)
-    print(postgres_container.dbname)
-    print(postgres_docker_container.get_container_host_ip())
-    print(postgres_docker_container.get_exposed_port(5432))
     app = reload(main).app
     with TestClient(app) as client:
         yield client
 
 
 @pytest.fixture
-def disable_db_migrations(monkeypatch) -> Generator[config.Settings, None, None]:
-    name = "APP_DB_MIGRATION_ENABLED"
+def change_posgtres_db_host(
+    postgres_docker_container: DockerContainer, monkeypatch
+) -> Generator[config.Settings, None, None]:
+    name = "APP_DB_HOST"
     original_value = os.getenv(name)
-    new_value = "False"
+    new_value = postgres_docker_container.get_container_host_ip()
+    # set new value, reload module and yield setting
+    yield patch_env_var(monkeypatch, name, new_value)
+    # reset to original value and reload module
+    patch_env_var(monkeypatch, name, original_value)
+
+
+@pytest.fixture
+def change_posgtres_db_port(
+    postgres_docker_container: DockerContainer, monkeypatch
+) -> Generator[config.Settings, None, None]:
+    name = "APP_DB_PORT"
+    original_value = os.getenv(name)
+    new_value = str(postgres_docker_container.get_exposed_port(5432))
     # set new value, reload module and yield setting
     yield patch_env_var(monkeypatch, name, new_value)
     # reset to original value and reload module
