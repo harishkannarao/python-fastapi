@@ -10,6 +10,7 @@ from testcontainers.core.waiting_utils import wait_for_logs
 
 import app.config as config
 import app.main as main
+import app.db_schema_migrations.yoyo_migration as yoyo_migration
 
 
 @pytest.fixture(scope="session")
@@ -45,7 +46,9 @@ def change_posgtres_db_host(
     original_value = os.getenv(name)
     new_value = postgres_docker_container.get_container_host_ip()
     # set new value, reload module and yield setting
-    yield patch_env_var(monkeypatch, name, new_value)
+    new_settings = patch_env_var(monkeypatch, name, new_value)
+    reload(yoyo_migration)
+    yield new_settings
     # reset to original value and reload module
     patch_env_var(monkeypatch, name, original_value)
 
@@ -58,7 +61,9 @@ def change_posgtres_db_port(
     original_value = os.getenv(name)
     new_value = str(postgres_docker_container.get_exposed_port(5432))
     # set new value, reload module and yield setting
-    yield patch_env_var(monkeypatch, name, new_value)
+    new_settings = patch_env_var(monkeypatch, name, new_value)
+    reload(yoyo_migration)
+    yield new_settings
     # reset to original value and reload module
     patch_env_var(monkeypatch, name, original_value)
 
