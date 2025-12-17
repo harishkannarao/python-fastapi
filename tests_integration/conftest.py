@@ -25,6 +25,10 @@ def postgres_docker_container() -> Generator[DockerContainer, None, None]:
         ports=[5432],
     ) as container:
         wait_for_logs(container, "server started")
+        stdout, stderr = container.get_logs()
+        all_logs = stdout.decode("utf-8") + stderr.decode("utf-8")
+        print("postgres container logs")
+        print(all_logs)
         yield container
 
 
