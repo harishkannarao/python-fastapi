@@ -4,13 +4,14 @@ from typing import Generator, Any, MutableMapping
 
 import pytest
 import structlog
+from assertpy import assert_that
 from fastapi.testclient import TestClient
+from tenacity import Retrying, stop_after_delay, wait_fixed
 from testcontainers.core.container import DockerContainer
-from testcontainers.core.waiting_utils import wait_for_logs
 
 import app.config as config
-import app.main as main
 import app.db_schema_migrations.yoyo_migration as yoyo_migration
+import app.main as main
 
 
 @pytest.fixture(scope="session")
@@ -24,11 +25,14 @@ def postgres_docker_container() -> Generator[DockerContainer, None, None]:
         env=env_vars,
         ports=[5432],
     ) as container:
-        wait_for_logs(container, "server started")
-        stdout, stderr = container.get_logs()
-        all_logs = stdout.decode("utf-8") + stderr.decode("utf-8")
-        print("postgres container logs")
-        print(all_logs)
+        # wait for the postgres server to start
+        for attempt in Retrying(
+            stop=stop_after_delay(10), wait=wait_fixed(0.5), reraise=True
+        ):
+            with attempt:
+                stdout, stderr = container.get_logs()
+                all_logs = stdout.decode("utf-8") + stderr.decode("utf-8")
+                assert_that(all_logs).contains("server started")
         yield container
 
 
