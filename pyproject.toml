@@ -9,6 +9,7 @@ dependencies = [
     "psycopg2-binary",
     "yoyo-migrations",
     "testcontainers[postgresql]",
+    "databases[asyncpg]",
 ]
 
 [dependency-groups]

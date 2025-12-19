@@ -5,11 +5,13 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from contextlib import asynccontextmanager
 
 from app.config import settings
+from app.db.database_config import database
 from app.db_schema_migrations.yoyo_migration import apply_db_migrations
 from app.logging.logging_config import setup_logging
 from app.middleware.process_time import ProcessTimeMiddleware
 from app.middleware.request_id import RequestIdMiddleware
 from app.routers.sample import router as sample_router
+from app.routers.customer import router as customer_router
 
 # Initialize logging at application startup
 setup_logging(json_logs=settings.app_json_logs)
@@ -17,13 +19,16 @@ setup_logging(json_logs=settings.app_json_logs)
 context = FastAPI(openapi_url=settings.app_open_api_url)
 
 context.include_router(sample_router)
+context.include_router(customer_router)
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     if settings.app_db_migration_enabled:
         apply_db_migrations()
+    await database.connect()
     yield
+    await database.disconnect()
 
 
 app = FastAPI(openapi_url=settings.app_open_api_url, lifespan=lifespan)

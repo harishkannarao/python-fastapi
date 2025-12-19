@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     app_db_database: str = "myuser"
     app_db_user: str = "myuser"
     app_db_password: str = "superpassword"
+    app_db_min_con: int = 5
+    app_db_max_con: int = 20
     # db settings end
 
 

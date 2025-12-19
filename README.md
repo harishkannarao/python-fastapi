@@ -46,13 +46,17 @@ Docker dependencies needs to be started using docker compose before running the 
 
     make fast_dev
 
-    http://localhost:8000
+    http://localhost:8000/docs
+
+    http://localhost:8000/context/docs
 
 ### Run in production mode
 
     make fast_run
 
-    http://localhost:8000
+    http://localhost:80000/docs
+
+    http://localhost:8000/context/docs
 
 ### Running with docker
 

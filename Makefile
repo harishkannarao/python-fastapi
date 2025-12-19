@@ -36,5 +36,17 @@ flake8:
 run_all:
 	make init ruff flake8 tests_unit tests_integration
 
+docker_compose_pull:
+	docker compose -f docker-compose.yml pull
+
+docker_compose_start:
+	docker compose -f docker-compose.yml up --build -d
+
+docker_compose_stop:
+	docker compose -f docker-compose.yml down -v
+
+docker_compose_restart:
+	make docker_compose_stop docker_compose_start
+
 docker:
 	docker build --pull -t python-fastapi -f Dockerfile .
