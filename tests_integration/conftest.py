@@ -14,6 +14,7 @@ import app.db_schema_migrations.yoyo_migration as yoyo_migration
 import app.main as main
 import time
 
+
 @pytest.fixture(scope="session")
 def postgres_docker_container() -> Generator[DockerContainer, None, None]:
     env_vars: dict[str, str] = {
@@ -39,8 +40,8 @@ def postgres_docker_container() -> Generator[DockerContainer, None, None]:
 
 @pytest.fixture
 def test_client(
-    change_posgtres_db_host: config.Settings,
-    change_posgtres_db_port: config.Settings,
+    change_postgres_db_host: config.Settings,
+    change_postgres_db_port: config.Settings,
 ) -> Generator[TestClient, None, None]:
     app = reload(main).app
     with TestClient(app) as client:
@@ -48,7 +49,7 @@ def test_client(
 
 
 @pytest.fixture
-def change_posgtres_db_host(
+def change_postgres_db_host(
     postgres_docker_container: DockerContainer, monkeypatch
 ) -> Generator[config.Settings, None, None]:
     name = "APP_DB_HOST"
@@ -63,7 +64,7 @@ def change_posgtres_db_host(
 
 
 @pytest.fixture
-def change_posgtres_db_port(
+def change_postgres_db_port(
     postgres_docker_container: DockerContainer, monkeypatch
 ) -> Generator[config.Settings, None, None]:
     name = "APP_DB_PORT"
