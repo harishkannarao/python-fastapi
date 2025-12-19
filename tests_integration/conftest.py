@@ -12,7 +12,7 @@ from testcontainers.core.container import DockerContainer
 import app.config as config
 import app.db_schema_migrations.yoyo_migration as yoyo_migration
 import app.main as main
-
+import time
 
 @pytest.fixture(scope="session")
 def postgres_docker_container() -> Generator[DockerContainer, None, None]:
@@ -26,6 +26,7 @@ def postgres_docker_container() -> Generator[DockerContainer, None, None]:
         ports=[5432],
     ) as container:
         # wait for the postgres server to start
+        time.sleep(0.5)
         for attempt in Retrying(
             stop=stop_after_delay(10), wait=wait_fixed(0.5), reraise=True
         ):
