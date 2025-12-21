@@ -9,6 +9,7 @@ SELECT_ALL_CUSTOMERS = "SELECT * FROM CUSTOMERS"
 INSERT_CUSTOMER = (
     "INSERT INTO CUSTOMERS(FIRST_NAME, LAST_NAME) VALUES (:first_name, :last_name)"
 )
+DELETE_ALL_CUSTOMERS = "TRUNCATE TABLE CUSTOMERS"
 
 router = APIRouter()
 
@@ -24,4 +25,10 @@ async def read_customers() -> list[Customer]:
 async def insert_customers(customers: list[Customer]) -> None:
     rows: list[dict[str, Any]] = list(map(lambda customer: vars(customer), customers))
     await database.execute_many(query=INSERT_CUSTOMER, values=rows)
+    return None
+
+
+@router.delete("/customers/", status_code=status.HTTP_204_NO_CONTENT, tags=["users"])
+async def delete_all_customers() -> None:
+    await database.execute(query=DELETE_ALL_CUSTOMERS)
     return None
