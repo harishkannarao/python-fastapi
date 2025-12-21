@@ -1,7 +1,7 @@
-import dataclasses
+from pydantic.dataclasses import dataclass
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclass(frozen=True)
 class Customer:
     first_name: str
     last_name: str

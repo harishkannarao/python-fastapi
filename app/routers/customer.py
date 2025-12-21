@@ -13,14 +13,10 @@ INSERT_CUSTOMER = (
 router = APIRouter()
 
 
-def to_customer(row) -> Customer:
-    return Customer(first_name=row.first_name, last_name=row.last_name)
-
-
 @router.get("/customers/", tags=["users"])
 async def read_customers() -> list[Customer]:
     rows = await database.fetch_all(query=SELECT_ALL_CUSTOMERS)
-    customers: list[Customer] = list(map(to_customer, rows))
+    customers: list[Customer] = list(map(lambda row: Customer(**dict(row)), rows))
     return customers
 
 
