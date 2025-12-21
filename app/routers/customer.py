@@ -5,9 +5,9 @@ from fastapi import APIRouter, status
 from app.db.database_config import database
 from app.model.customer import Customer
 
-SELECT_ALL_CUSTOMERS = "select * from customers"
+SELECT_ALL_CUSTOMERS = "SELECT * FROM CUSTOMERS"
 INSERT_CUSTOMER = (
-    "INSERT INTO customers(first_name, last_name) VALUES (:first_name, :last_name)"
+    "INSERT INTO CUSTOMERS(FIRST_NAME, LAST_NAME) VALUES (:first_name, :last_name)"
 )
 
 router = APIRouter()
