@@ -26,9 +26,11 @@ context.include_router(customer_router)
 async def lifespan(_app: FastAPI):
     if settings.app_db_migration_enabled:
         apply_db_migrations()
-    await database.connect()
+    if settings.app_db_enabled:
+        await database.connect()
     yield
-    await database.disconnect()
+    if settings.app_db_enabled:
+        await database.disconnect()
 
 
 app = FastAPI(openapi_url=settings.app_open_api_url, lifespan=lifespan)

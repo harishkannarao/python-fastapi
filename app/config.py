@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     # db settings start
     app_db_migration_enabled: bool = True
     app_db_migration_mode: str = "apply"
+    app_db_enabled: bool = True
     app_db_host: str = "localhost"
     app_db_port: str = "5432"
     app_db_database: str = "myuser"

@@ -11,6 +11,7 @@ from testcontainers.core.container import DockerContainer
 
 import app.config as config
 import app.db_schema_migrations.yoyo_migration as yoyo_migration
+import app.db.database_config as database_config
 import app.main as main
 import time
 
@@ -46,6 +47,7 @@ def test_client(
     app = reload(main).app
     with TestClient(app) as client:
         yield client
+    reload(main)
 
 
 @pytest.fixture
@@ -58,9 +60,12 @@ def change_postgres_db_host(
     # set new value, reload module and yield setting
     new_settings = patch_env_var(monkeypatch, name, new_value)
     reload(yoyo_migration)
+    reload(database_config)
     yield new_settings
     # reset to original value and reload module
     patch_env_var(monkeypatch, name, original_value)
+    reload(yoyo_migration)
+    reload(database_config)
 
 
 @pytest.fixture
@@ -73,9 +78,12 @@ def change_postgres_db_port(
     # set new value, reload module and yield setting
     new_settings = patch_env_var(monkeypatch, name, new_value)
     reload(yoyo_migration)
+    reload(database_config)
     yield new_settings
     # reset to original value and reload module
     patch_env_var(monkeypatch, name, original_value)
+    reload(yoyo_migration)
+    reload(database_config)
 
 
 @pytest.fixture
