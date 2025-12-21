@@ -13,5 +13,5 @@ def to_customer(row) -> Customer:
 @router.get("/customers/", tags=["users"])
 async def read_customers() -> list[Customer]:
     rows = await database.fetch_all(query="select * from customers")
-    customers: list[Customer] = list(map(lambda row: to_customer(row), rows))
+    customers: list[Customer] = list(map(to_customer, rows))
     return customers
