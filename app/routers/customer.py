@@ -1,6 +1,6 @@
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, status
 
 from app.db.database_config import database
 from app.model.customer import Customer
@@ -24,7 +24,8 @@ async def read_customers() -> list[Customer]:
     return customers
 
 
-@router.put("/customers/", tags=["users"])
+@router.put("/customers/", status_code=status.HTTP_204_NO_CONTENT, tags=["users"])
 async def insert_customers(customers: list[Customer]) -> None:
     rows: list[dict[str, Any]] = list(map(lambda customer: vars(customer), customers))
     await database.execute_many(query=INSERT_CUSTOMER, values=rows)
+    return None
