@@ -8,13 +8,32 @@ from pytest_mock import MockerFixture
 
 
 @pytest.fixture
-def mock_database_execute(mocker: MockerFixture) -> AsyncMock:
+def mock_execute(mocker: MockerFixture) -> AsyncMock:
     mock_execute: AsyncMock = mocker.patch("app.db.database_config.database.execute")
     return mock_execute
 
 
-def test_customers_insert_read_delete(
-    mock_database_execute: AsyncMock, test_client: TestClient
-):
+@pytest.fixture
+def mock_execute_many(mocker: MockerFixture) -> AsyncMock:
+    mock_execute_many: AsyncMock = mocker.patch(
+        "app.db.database_config.database.execute_many"
+    )
+    return mock_execute_many
+
+
+def test_customers_delete(mock_execute: AsyncMock, test_client: TestClient):
     initial_delete: Response = test_client.delete("/context/customers")
     assert_that(initial_delete.status_code).is_equal_to(204)
+
+    assert len(mock_execute.call_args_list) == 1
+    assert mock_execute.call_args.kwargs["query"] == "TRUNCATE TABLE CUSTOMERS"
+
+
+def test_customers_insert(mock_execute_many: AsyncMock, test_client: TestClient):
+    initial_delete: Response = test_client.put("/context/customers", json=[])
+    assert_that(initial_delete.status_code).is_equal_to(204)
+
+    assert len(mock_execute_many.call_args_list) == 1
+    assert_that(mock_execute_many.call_args.kwargs["query"]).is_equal_to(
+        "INSERT INTO CUSTOMERS(FIRST_NAME, LAST_NAME) VALUES (:first_name, :last_name)"
+    )
