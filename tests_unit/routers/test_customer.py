@@ -10,6 +10,8 @@ from pytest_mock import MockerFixture
 
 from app.model.customer import Customer
 
+CUSTOMERS_ENDPOINT = "/context/customers"
+
 
 @pytest.fixture
 def mock_execute(mocker: MockerFixture) -> AsyncMock:
@@ -34,7 +36,7 @@ def mock_fetch_all(mocker: MockerFixture) -> AsyncMock:
 
 
 def test_customers_delete(mock_execute: AsyncMock, test_client: TestClient):
-    response: Response = test_client.delete("/context/customers")
+    response: Response = test_client.delete(CUSTOMERS_ENDPOINT)
     assert_that(response.status_code).is_equal_to(204)
 
     assert len(mock_execute.call_args_list) == 1
@@ -46,7 +48,7 @@ def test_customers_insert(mock_execute_many: AsyncMock, test_client: TestClient)
     customer2 = Customer(first_name="fname2", last_name="lname2")
     input_json = jsonable_encoder([customer1, customer2])
 
-    response: Response = test_client.put("/context/customers", json=input_json)
+    response: Response = test_client.put(CUSTOMERS_ENDPOINT, json=input_json)
     assert_that(response.status_code).is_equal_to(204)
 
     assert len(mock_execute_many.call_args_list) == 1
@@ -65,7 +67,7 @@ def test_customers_read(mock_fetch_all: AsyncMock, test_client: TestClient):
 
     mock_fetch_all.return_value = jsonable_encoder([customer1, customer2])
 
-    response: Response = test_client.get("/context/customers")
+    response: Response = test_client.get(CUSTOMERS_ENDPOINT)
 
     assert_that(response.status_code).is_equal_to(200)
     response_json: list[dict[str, Any]] = response.json()
