@@ -1,4 +1,5 @@
 import os
+import time
 from importlib import reload
 from typing import Generator, Any, MutableMapping
 
@@ -10,10 +11,9 @@ from tenacity import Retrying, stop_after_delay, wait_fixed
 from testcontainers.core.container import DockerContainer
 
 import app.config as config
-import app.db_schema_migrations.yoyo_migration as yoyo_migration
 import app.db.database_config as database_config
+import app.db_schema_migrations.yoyo_migration as yoyo_migration
 import app.main as main
-import time
 
 
 @pytest.fixture(scope="session")
