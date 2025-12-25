@@ -14,6 +14,14 @@ CUSTOMERS_ENDPOINT = "/context/customers"
 
 
 @pytest.fixture
+def mock_transaction(mocker: MockerFixture) -> AsyncMock:
+    mock_transaction: AsyncMock = mocker.patch(
+        "app.db.database_config.database.transaction"
+    )
+    return mock_transaction
+
+
+@pytest.fixture
 def mock_execute(mocker: MockerFixture) -> AsyncMock:
     mock_execute: AsyncMock = mocker.patch("app.db.database_config.database.execute")
     return mock_execute
@@ -35,7 +43,9 @@ def mock_fetch_all(mocker: MockerFixture) -> AsyncMock:
     return mock_fetch_all
 
 
-def test_customers_delete(mock_execute: AsyncMock, test_client: TestClient):
+def test_customers_delete(
+    mock_transaction: AsyncMock, mock_execute: AsyncMock, test_client: TestClient
+):
     response: Response = test_client.delete(CUSTOMERS_ENDPOINT)
     assert_that(response.status_code).is_equal_to(204)
 
@@ -43,7 +53,9 @@ def test_customers_delete(mock_execute: AsyncMock, test_client: TestClient):
     assert mock_execute.call_args.kwargs["query"] == "TRUNCATE TABLE CUSTOMERS"
 
 
-def test_customers_insert(mock_execute_many: AsyncMock, test_client: TestClient):
+def test_customers_insert(
+    mock_transaction: AsyncMock, mock_execute_many: AsyncMock, test_client: TestClient
+):
     customer1 = Customer(first_name="fname1", last_name="lname1")
     customer2 = Customer(first_name="fname2", last_name="lname2")
     input_json = jsonable_encoder([customer1, customer2])
@@ -61,7 +73,9 @@ def test_customers_insert(mock_execute_many: AsyncMock, test_client: TestClient)
     assert_that(inserted_rows).contains(jsonable_encoder(customer2))
 
 
-def test_customers_read(mock_fetch_all: AsyncMock, test_client: TestClient):
+def test_customers_read(
+    mock_transaction: AsyncMock, mock_fetch_all: AsyncMock, test_client: TestClient
+):
     customer1 = Customer(first_name="fname1", last_name="lname1")
     customer2 = Customer(first_name="fname2", last_name="lname2")
 
