@@ -27,7 +27,7 @@ upgrade:
 	uv sync --upgrade
 
 ruff:
-	uv run ruff check
+	uv run ruff check --fix
 	uv run ruff format
 
 flake8:

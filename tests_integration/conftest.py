@@ -11,6 +11,8 @@ from tenacity import Retrying, stop_after_delay, wait_fixed
 from testcontainers.core.container import DockerContainer
 
 import app.config as config
+import app.dao.customer_dao as customer_dao
+import app.routers.customer as customer
 import app.db.database_config as database_config
 import app.db_schema_migrations.yoyo_migration as yoyo_migration
 import app.main as main
@@ -61,11 +63,15 @@ def change_postgres_db_host(
     new_settings = patch_env_var(monkeypatch, name, new_value)
     reload(yoyo_migration)
     reload(database_config)
+    reload(customer)
+    reload(customer_dao)
     yield new_settings
     # reset to original value and reload module
     patch_env_var(monkeypatch, name, original_value)
     reload(yoyo_migration)
     reload(database_config)
+    reload(customer)
+    reload(customer_dao)
 
 
 @pytest.fixture
@@ -79,11 +85,15 @@ def change_postgres_db_port(
     new_settings = patch_env_var(monkeypatch, name, new_value)
     reload(yoyo_migration)
     reload(database_config)
+    reload(customer)
+    reload(customer_dao)
     yield new_settings
     # reset to original value and reload module
     patch_env_var(monkeypatch, name, original_value)
     reload(yoyo_migration)
     reload(database_config)
+    reload(customer)
+    reload(customer_dao)
 
 
 @pytest.fixture
