@@ -1,15 +1,8 @@
-from typing import Any
-
 from fastapi import APIRouter, status
 
+from app.dao import customer_dao
 from app.db.database_config import database
 from app.model.customer import Customer
-
-SELECT_ALL_CUSTOMERS = "SELECT * FROM CUSTOMERS"
-INSERT_CUSTOMER = (
-    "INSERT INTO CUSTOMERS(FIRST_NAME, LAST_NAME) VALUES (:first_name, :last_name)"
-)
-DELETE_ALL_CUSTOMERS = "TRUNCATE TABLE CUSTOMERS"
 
 router = APIRouter(prefix="/customers", tags=["users"])
 
@@ -17,23 +10,16 @@ router = APIRouter(prefix="/customers", tags=["users"])
 @router.get("")
 async def read_customers() -> list[Customer]:
     async with database.transaction():
-        rows = await database.fetch_all(query=SELECT_ALL_CUSTOMERS)
-        customers: list[Customer] = list(map(lambda row: Customer(**dict(row)), rows))
-        return customers
+        return await customer_dao.read_customers()
 
 
 @router.put("", status_code=status.HTTP_204_NO_CONTENT, tags=["users"])
 async def insert_customers(customers: list[Customer]) -> None:
     async with database.transaction():
-        rows: list[dict[str, Any]] = list(
-            map(lambda customer: vars(customer), customers)
-        )
-        await database.execute_many(query=INSERT_CUSTOMER, values=rows)
-        return None
+        return await customer_dao.insert_customers(customers)
 
 
 @router.delete("", status_code=status.HTTP_204_NO_CONTENT, tags=["users"])
 async def delete_all_customers() -> None:
     async with database.transaction():
-        await database.execute(query=DELETE_ALL_CUSTOMERS)
-        return None
+        return await customer_dao.delete_all_customers()
