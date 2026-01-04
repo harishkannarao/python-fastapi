@@ -48,5 +48,8 @@ docker_compose_stop:
 docker_compose_restart:
 	make docker_compose_stop docker_compose_start
 
+fast_dev_docker_compose_restart:
+	make docker_compose_restart fast_dev
+
 docker:
 	docker build --pull -t python-fastapi -f Dockerfile .
