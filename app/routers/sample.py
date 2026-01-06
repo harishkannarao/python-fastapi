@@ -6,7 +6,7 @@ from sqlalchemy import ScalarResult
 from sqlmodel import select
 
 from app.db.database_config import create_session
-from app.model.db.sample_table import SampleTable
+from app.model.db.sample_entity import SampleEntity
 
 router = APIRouter(prefix="/samples/sqlmodel", tags=["samples", "sqlmodel"])
 
@@ -14,16 +14,16 @@ router = APIRouter(prefix="/samples/sqlmodel", tags=["samples", "sqlmodel"])
 @router.get("")
 async def read_samples(
     offset: int = 0, limit: int = Query(default=100, ge=1, le=100)
-) -> Sequence[SampleTable]:
+) -> Sequence[SampleEntity]:
     with create_session() as session:
-        return session.exec(select(SampleTable).offset(offset).limit(limit)).all()
+        return session.exec(select(SampleEntity).offset(offset).limit(limit)).all()
 
 
 @router.get("/{sample_id}")
-async def read_sample_by_id(sample_id: UUID, response: Response) -> SampleTable | None:
+async def read_sample_by_id(sample_id: UUID, response: Response) -> SampleEntity | None:
     with create_session() as session:
-        result: SampleTable | None = session.exec(
-            select(SampleTable).where(SampleTable.id == sample_id)
+        result: SampleEntity | None = session.exec(
+            select(SampleEntity).where(SampleEntity.id == sample_id)
         ).one_or_none()
         if result is None:
             response.status_code = 404
@@ -31,7 +31,7 @@ async def read_sample_by_id(sample_id: UUID, response: Response) -> SampleTable 
 
 
 @router.put("")
-async def create_sample(sample: SampleTable) -> SampleTable:
+async def create_sample(sample: SampleEntity) -> SampleEntity:
     with create_session() as session:
         session.add(sample)
         session.commit()
@@ -40,15 +40,17 @@ async def create_sample(sample: SampleTable) -> SampleTable:
 
 
 @router.post("")
-async def update_sample(sample: SampleTable, response: Response) -> SampleTable | None:
+async def update_sample(
+    sample: SampleEntity, response: Response
+) -> SampleEntity | None:
     statement = (
-        select(SampleTable)
-        .where(SampleTable.id == sample.id)
-        .where(SampleTable.version == sample.version)
+        select(SampleEntity)
+        .where(SampleEntity.id == sample.id)
+        .where(SampleEntity.version == sample.version)
     )
     with create_session() as session:
-        results: ScalarResult[SampleTable] = session.exec(statement)
-        found_sample: SampleTable | None = results.first()
+        results: ScalarResult[SampleEntity] = session.exec(statement)
+        found_sample: SampleEntity | None = results.first()
         if found_sample is None:
             response.status_code = 409
             return None
@@ -62,8 +64,8 @@ async def update_sample(sample: SampleTable, response: Response) -> SampleTable 
 @router.delete("/{sample_id}", status_code=204)
 async def delete_sample_by_id(sample_id: UUID) -> None:
     with create_session() as session:
-        result: SampleTable | None = session.exec(
-            select(SampleTable).where(SampleTable.id == sample_id)
+        result: SampleEntity | None = session.exec(
+            select(SampleEntity).where(SampleEntity.id == sample_id)
         ).one_or_none()
         if result is not None:
             session.delete(result)

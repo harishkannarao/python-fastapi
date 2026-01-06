@@ -7,7 +7,7 @@ from sqlalchemy.orm import declared_attr
 from sqlmodel import SQLModel, Field
 
 
-class SampleTable(SQLModel, table=True):
+class SampleEntity(SQLModel, table=True):
     @declared_attr
     def __tablename__(cls) -> str:
         return "sample_table"
