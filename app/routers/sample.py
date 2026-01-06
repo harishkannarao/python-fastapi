@@ -1,6 +1,7 @@
 from typing import Sequence
+from uuid import UUID
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Query, Response
 from sqlalchemy import ScalarResult
 from sqlmodel import select
 
@@ -11,9 +12,22 @@ router = APIRouter(prefix="/samples/sqlmodel", tags=["samples", "sqlmodel"])
 
 
 @router.get("")
-async def read_all_samples() -> Sequence[SampleTable]:
+async def read_samples(
+    offset: int = 0, limit: int = Query(default=100, ge=1, le=100)
+) -> Sequence[SampleTable]:
     with create_session() as session:
-        return session.exec(select(SampleTable).offset(0).limit(10)).all()
+        return session.exec(select(SampleTable).offset(offset).limit(limit)).all()
+
+
+@router.get("/{sample_id}")
+async def read_sample_by_id(sample_id: UUID, response: Response) -> SampleTable | None:
+    with create_session() as session:
+        result: SampleTable | None = session.exec(
+            select(SampleTable).where(SampleTable.id == sample_id)
+        ).one_or_none()
+        if result is None:
+            response.status_code = 404
+        return result
 
 
 @router.put("")
@@ -43,3 +57,15 @@ async def update_sample(sample: SampleTable, response: Response) -> SampleTable 
         session.commit()
         session.refresh(found_sample)
         return found_sample
+
+
+@router.delete("/{sample_id}", status_code=204)
+async def delete_sample_by_id(sample_id: UUID) -> None:
+    with create_session() as session:
+        result: SampleTable | None = session.exec(
+            select(SampleTable).where(SampleTable.id == sample_id)
+        ).one_or_none()
+        if result is not None:
+            session.delete(result)
+            session.commit()
+        return None
