@@ -6,7 +6,7 @@ from sqlalchemy import ScalarResult
 from sqlmodel import select
 
 from app.db.database_config import create_session
-from app.model.db.sample_entity import SampleEntity
+from app.model.entity.sample_entity import SampleEntity
 
 router = APIRouter(prefix="/samples/sqlmodel", tags=["samples", "sqlmodel"])
 
