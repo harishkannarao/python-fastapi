@@ -3,12 +3,13 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Response
+from pydantic import RootModel
 from sqlalchemy import ScalarResult
 from sqlmodel import select
 
 from app.db.database_config import create_session
 from app.model.entity.sample_entity import SampleEntity
-from app.model.request.sample import SampleCreate
+from app.model.request.sample import SampleCreate, SampleUpdate
 from app.model.response.sample import Sample
 
 router = APIRouter(prefix="/samples/sqlmodel", tags=["samples", "sqlmodel"])
@@ -54,24 +55,26 @@ async def create_sample(sample: SampleCreate) -> Sample:
 
 @router.post("")
 async def update_sample(
-    sample: SampleEntity, response: Response
-) -> SampleEntity | None:
-    statement = (
-        select(SampleEntity)
-        .where(SampleEntity.id == sample.id)
-        .where(SampleEntity.version == sample.version)
-    )
+    sample: SampleUpdate, response: Response
+) -> Sample | None:
     with create_session() as session:
+        statement = (
+            select(SampleEntity)
+            .where(SampleEntity.id == sample.id)
+            .where(SampleEntity.version == sample.old_version)
+        )
         results: ScalarResult[SampleEntity] = session.exec(statement)
-        found_sample: SampleEntity | None = results.first()
+        found_sample: SampleEntity | None = results.one_or_none()
         if found_sample is None:
             response.status_code = 409
             return None
-        found_sample.sqlmodel_update(sample.model_dump(exclude_unset=True))
+        found_sample.sqlmodel_update(RootModel(sample).model_dump())
+        found_sample.updated_datetime = datetime.now(timezone.utc)
+        found_sample.version = sample.new_version
         session.add(found_sample)
         session.commit()
         session.refresh(found_sample)
-        return found_sample
+        return Sample(**found_sample.model_dump())
 
 
 @router.delete("/{sample_id}", status_code=204)
