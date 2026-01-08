@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime, timezone
+from typing import Callable
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Response
@@ -44,9 +45,9 @@ async def create_sample(sample: SampleCreate) -> Sample:
             id=uuid.uuid4(),
             version=1,
             created_datetime=now,
-            updated_datetime=now,
-            **vars(sample),
+            updated_datetime=now
         )
+        sample_entity.sqlmodel_update(RootModel(sample).model_dump())
         session.add(sample_entity)
         session.commit()
         session.refresh(sample_entity)
@@ -54,9 +55,7 @@ async def create_sample(sample: SampleCreate) -> Sample:
 
 
 @router.post("")
-async def update_sample(
-    sample: SampleUpdate, response: Response
-) -> Sample | None:
+async def update_sample(sample: SampleUpdate, response: Response) -> Sample | None:
     with create_session() as session:
         statement = (
             select(SampleEntity)
