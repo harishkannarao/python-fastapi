@@ -136,6 +136,53 @@ def test_sample_orm_update(test_client: TestClient):
     updated_sample: Sample = Sample(**update_response.json())
     assert_updated_response_entity(updated_sample, created_sample, update_request)
 
+    read_after_update = test_client.get(f"{SAMPLE_ORM_ENDPOINT}/{created_sample.id}")
+    assert_that(read_after_update.status_code).is_equal_to(200)
+    sample = Sample(**read_after_update.json())
+    assert_that(sample).is_equal_to(updated_sample)
+
+    # returns 409 for version mismatch
+    second_update_response = test_client.post(
+        SAMPLE_ORM_ENDPOINT, json=jsonable_encoder(update_request)
+    )
+    assert_that(second_update_response.status_code).is_equal_to(409)
+
+
+def test_sample_orm_delete_by_id(test_client: TestClient):
+    delete_all_samples(test_client)
+
+    create_request: SampleCreate = SampleCreate(
+        username=f"user-1-{uuid.uuid4()}",
+        bool_field=True,
+        float_field=0.8,
+        decimal_field=Decimal("0.5"),
+    )
+    create_response = test_client.put(
+        SAMPLE_ORM_ENDPOINT, json=jsonable_encoder(create_request)
+    )
+    assert_that(create_response.status_code).is_equal_to(200)
+    created_sample: Sample = Sample(**create_response.json())
+    assert_created_response_entity(created_sample, create_request)
+
+    delete_by_id_response = test_client.delete(
+        f"{SAMPLE_ORM_ENDPOINT}/{created_sample.id}"
+    )
+    assert_that(delete_by_id_response.status_code).is_equal_to(204)
+
+    read_after_delete = test_client.get(f"{SAMPLE_ORM_ENDPOINT}/{created_sample.id}")
+    assert_that(read_after_delete.status_code).is_equal_to(404)
+
+    http_read_all_after_delete = test_client.get(SAMPLE_ORM_ENDPOINT)
+    assert_that(http_read_all_after_delete.status_code).is_equal_to(200)
+
+    empty_samples = [Sample(**item) for item in http_read_all_after_delete.json()]
+    assert_that(empty_samples).is_empty()
+
+    delete_by_id_again_for_idempotency = test_client.delete(
+        f"{SAMPLE_ORM_ENDPOINT}/{created_sample.id}"
+    )
+    assert_that(delete_by_id_again_for_idempotency.status_code).is_equal_to(204)
+
 
 def delete_all_samples(test_client: TestClient) -> None:
     delete_all_response: Response = test_client.delete(SAMPLE_ORM_ENDPOINT)

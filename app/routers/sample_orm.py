@@ -33,6 +33,7 @@ async def read_sample_by_id(sample_id: UUID, response: Response) -> Sample | Non
         ).one_or_none()
         if result is None:
             response.status_code = 404
+            return None
         return Sample(**result.model_dump())
 
 
