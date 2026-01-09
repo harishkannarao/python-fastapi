@@ -1,19 +1,18 @@
 import uuid
 from datetime import datetime, timezone
-from typing import Callable
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Response
 from pydantic import RootModel
 from sqlalchemy import ScalarResult
-from sqlmodel import select
+from sqlmodel import select, delete
 
 from app.db.database_config import create_session
 from app.model.entity.sample_entity import SampleEntity
 from app.model.request.sample import SampleCreate, SampleUpdate
 from app.model.response.sample import Sample
 
-router = APIRouter(prefix="/samples/sqlmodel", tags=["samples", "sqlmodel"])
+router = APIRouter(prefix="/samples/orm", tags=["samples", "orm"])
 
 
 @router.get("")
@@ -42,10 +41,7 @@ async def create_sample(sample: SampleCreate) -> Sample:
     with create_session() as session:
         now: datetime = datetime.now(timezone.utc)
         sample_entity: SampleEntity = SampleEntity(
-            id=uuid.uuid4(),
-            version=1,
-            created_datetime=now,
-            updated_datetime=now
+            id=uuid.uuid4(), version=1, created_datetime=now, updated_datetime=now
         )
         sample_entity.sqlmodel_update(RootModel(sample).model_dump())
         session.add(sample_entity)
@@ -85,4 +81,12 @@ async def delete_sample_by_id(sample_id: UUID) -> None:
         if result is not None:
             session.delete(result)
             session.commit()
+        return None
+
+
+@router.delete("", status_code=204)
+async def delete_all() -> None:
+    with create_session() as session:
+        session.exec(delete(SampleEntity))
+        session.commit()
         return None

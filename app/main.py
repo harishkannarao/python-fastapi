@@ -10,7 +10,7 @@ from app.db_schema_migrations.yoyo_migration import apply_db_migrations
 from app.logging.logging_config import setup_logging
 from app.middleware.process_time import ProcessTimeMiddleware
 from app.middleware.request_id import RequestIdMiddleware
-from app.routers.sample import router as sample_router
+from app.routers.sample_orm import router as sample_router
 from app.routers.customer import router as customer_router
 
 # Initialize logging at application startup

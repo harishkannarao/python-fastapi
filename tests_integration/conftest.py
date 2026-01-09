@@ -13,6 +13,7 @@ from testcontainers.core.container import DockerContainer
 import app.config as config
 import app.dao.customer_dao as customer_dao
 import app.routers.customer as customer
+import app.routers.sample_orm as sample_orm
 import app.db.database_config as database_config
 import app.db_schema_migrations.yoyo_migration as yoyo_migration
 import app.main as main
@@ -64,6 +65,7 @@ def change_postgres_db_host(
     reload(yoyo_migration)
     reload(database_config)
     reload(customer)
+    reload(sample_orm)
     reload(customer_dao)
     yield new_settings
     # reset to original value and reload module
@@ -71,6 +73,7 @@ def change_postgres_db_host(
     reload(yoyo_migration)
     reload(database_config)
     reload(customer)
+    reload(sample_orm)
     reload(customer_dao)
 
 
@@ -86,6 +89,7 @@ def change_postgres_db_port(
     reload(yoyo_migration)
     reload(database_config)
     reload(customer)
+    reload(sample_orm)
     reload(customer_dao)
     yield new_settings
     # reset to original value and reload module
@@ -93,6 +97,7 @@ def change_postgres_db_port(
     reload(yoyo_migration)
     reload(database_config)
     reload(customer)
+    reload(sample_orm)
     reload(customer_dao)
 
 
