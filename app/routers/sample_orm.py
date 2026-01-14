@@ -1,11 +1,10 @@
 import uuid
 from datetime import datetime, timezone
-from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Response
 from pydantic import RootModel
-from sqlalchemy import ScalarResult, CursorResult
+from sqlalchemy import ScalarResult
 from sqlmodel import select, delete
 
 from app.db.database_config import create_session, create_async_session
@@ -21,12 +20,14 @@ async def read_samples(
     offset: int = 0, limit: int = Query(default=100, ge=1, le=100)
 ) -> list[Sample]:
     async with create_async_session() as session:
-        entities = (await session.exec(
-            select(SampleEntity)
-            .order_by(SampleEntity.created_datetime)
-            .offset(offset)
-            .limit(limit)
-        )).all()
+        entities = (
+            await session.exec(
+                select(SampleEntity)
+                .order_by(SampleEntity.created_datetime)
+                .offset(offset)
+                .limit(limit)
+            )
+        ).all()
         samples = list(map(lambda e: Sample(**e.model_dump()), entities))
         return samples
 
@@ -34,9 +35,9 @@ async def read_samples(
 @router.get("/{sample_id}")
 async def read_sample_by_id(sample_id: UUID, response: Response) -> Sample | None:
     async with create_async_session() as session:
-        result: SampleEntity | None = (await session.exec(
-            select(SampleEntity).where(SampleEntity.id == sample_id)
-        )).one_or_none()
+        result: SampleEntity | None = (
+            await session.exec(select(SampleEntity).where(SampleEntity.id == sample_id))
+        ).one_or_none()
         if result is None:
             response.status_code = 404
             return None
@@ -82,9 +83,9 @@ async def update_sample(sample: SampleUpdate, response: Response) -> Sample | No
 @router.delete("/{sample_id}", status_code=204)
 async def delete_sample_by_id(sample_id: UUID) -> None:
     async with create_async_session() as session:
-        result: SampleEntity | None = (await session.exec(
-            select(SampleEntity).where(SampleEntity.id == sample_id)
-        )).one_or_none()
+        result: SampleEntity | None = (
+            await session.exec(select(SampleEntity).where(SampleEntity.id == sample_id))
+        ).one_or_none()
         if result is not None:
             await session.delete(result)
             await session.commit()

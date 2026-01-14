@@ -112,9 +112,16 @@ def test_sample_orm_read_all_with_pagination(test_client: TestClient):
     sample_3: Sample = create_random_sample(test_client)
     sample_4: Sample = create_random_sample(test_client)
 
-    first_and_second_response = test_client.get(SAMPLE_ORM_ENDPOINT, params={"limit": "2", })
+    first_and_second_response = test_client.get(
+        SAMPLE_ORM_ENDPOINT,
+        params={
+            "limit": "2",
+        },
+    )
     assert_that(first_and_second_response.status_code).is_equal_to(200)
-    first_and_second_samples = [Sample(**item) for item in first_and_second_response.json()]
+    first_and_second_samples = [
+        Sample(**item) for item in first_and_second_response.json()
+    ]
     assert_that(first_and_second_samples).is_length(2)
     assert_that(
         [sample for sample in first_and_second_samples if sample.id == sample_1.id]
@@ -123,9 +130,17 @@ def test_sample_orm_read_all_with_pagination(test_client: TestClient):
         [sample for sample in first_and_second_samples if sample.id == sample_2.id]
     ).contains_only(sample_2)
 
-    second_and_third_response = test_client.get(SAMPLE_ORM_ENDPOINT, params={"offset": "1", "limit": "2", })
+    second_and_third_response = test_client.get(
+        SAMPLE_ORM_ENDPOINT,
+        params={
+            "offset": "1",
+            "limit": "2",
+        },
+    )
     assert_that(second_and_third_response.status_code).is_equal_to(200)
-    second_and_third_samples = [Sample(**item) for item in second_and_third_response.json()]
+    second_and_third_samples = [
+        Sample(**item) for item in second_and_third_response.json()
+    ]
     assert_that(second_and_third_samples).is_length(2)
     assert_that(
         [sample for sample in second_and_third_samples if sample.id == sample_2.id]
@@ -134,7 +149,12 @@ def test_sample_orm_read_all_with_pagination(test_client: TestClient):
         [sample for sample in second_and_third_samples if sample.id == sample_3.id]
     ).contains_only(sample_3)
 
-    fourth_response = test_client.get(SAMPLE_ORM_ENDPOINT, params={"offset": "3", })
+    fourth_response = test_client.get(
+        SAMPLE_ORM_ENDPOINT,
+        params={
+            "offset": "3",
+        },
+    )
     assert_that(fourth_response.status_code).is_equal_to(200)
     fourth_sample = [Sample(**item) for item in fourth_response.json()]
     assert_that(fourth_sample).is_length(1)
@@ -241,7 +261,7 @@ def assert_created_response_entity(actual: Sample, expected: SampleCreate) -> No
 
 
 def assert_updated_response_entity(
-        actual: Sample, original: Sample, update: SampleUpdate
+    actual: Sample, original: Sample, update: SampleUpdate
 ) -> None:
     assert_that(actual.id).is_equal_to(original.id)
     assert_that(actual.created_datetime).is_equal_to(original.created_datetime)
