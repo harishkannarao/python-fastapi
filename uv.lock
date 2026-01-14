@@ -959,6 +959,7 @@ name = "python-fastapi"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "asyncpg" },
     { name = "databases", extra = ["asyncpg"] },
     { name = "fastapi", extra = ["all"] },
     { name = "psycopg2-binary" },
@@ -982,6 +983,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "asyncpg" },
     { name = "databases", extras = ["asyncpg"] },
     { name = "fastapi", extras = ["all"] },
     { name = "psycopg2-binary" },

@@ -1,13 +1,14 @@
 import uuid
 from datetime import datetime, timezone
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Response
 from pydantic import RootModel
-from sqlalchemy import ScalarResult
+from sqlalchemy import ScalarResult, CursorResult
 from sqlmodel import select, delete
 
-from app.db.database_config import create_session
+from app.db.database_config import create_session, create_async_session
 from app.model.entity.sample_entity import SampleEntity
 from app.model.request.sample import SampleCreate, SampleUpdate
 from app.model.response.sample import Sample
@@ -19,23 +20,23 @@ router = APIRouter(prefix="/samples/orm", tags=["samples", "orm"])
 async def read_samples(
     offset: int = 0, limit: int = Query(default=100, ge=1, le=100)
 ) -> list[Sample]:
-    with (create_session() as session):
-        entities = session.exec(
+    async with create_async_session() as session:
+        entities = (await session.exec(
             select(SampleEntity)
             .order_by(SampleEntity.created_datetime)
             .offset(offset)
             .limit(limit)
-        ).all()
+        )).all()
         samples = list(map(lambda e: Sample(**e.model_dump()), entities))
         return samples
 
 
 @router.get("/{sample_id}")
 async def read_sample_by_id(sample_id: UUID, response: Response) -> Sample | None:
-    with create_session() as session:
-        result: SampleEntity | None = session.exec(
+    async with create_async_session() as session:
+        result: SampleEntity | None = (await session.exec(
             select(SampleEntity).where(SampleEntity.id == sample_id)
-        ).one_or_none()
+        )).one_or_none()
         if result is None:
             response.status_code = 404
             return None
