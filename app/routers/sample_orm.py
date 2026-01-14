@@ -19,8 +19,13 @@ router = APIRouter(prefix="/samples/orm", tags=["samples", "orm"])
 async def read_samples(
     offset: int = 0, limit: int = Query(default=100, ge=1, le=100)
 ) -> list[Sample]:
-    with create_session() as session:
-        entities = session.exec(select(SampleEntity).offset(offset).limit(limit)).all()
+    with (create_session() as session):
+        entities = session.exec(
+            select(SampleEntity)
+            .order_by(SampleEntity.created_datetime)
+            .offset(offset)
+            .limit(limit)
+        ).all()
         samples = list(map(lambda e: Sample(**e.model_dump()), entities))
         return samples
 
