@@ -45,15 +45,15 @@ async def read_sample_by_id(sample_id: UUID, response: Response) -> Sample | Non
 
 @router.put("")
 async def create_sample(sample: SampleCreate) -> Sample:
-    with create_session() as session:
+    async with create_async_session() as session:
         now: datetime = datetime.now(timezone.utc)
         sample_entity: SampleEntity = SampleEntity(
             id=uuid.uuid4(), version=1, created_datetime=now, updated_datetime=now
         )
         sample_entity.sqlmodel_update(RootModel(sample).model_dump())
         session.add(sample_entity)
-        session.commit()
-        session.refresh(sample_entity)
+        await session.commit()
+        await session.refresh(sample_entity)
         return Sample(**sample_entity.model_dump())
 
 
@@ -81,13 +81,13 @@ async def update_sample(sample: SampleUpdate, response: Response) -> Sample | No
 
 @router.delete("/{sample_id}", status_code=204)
 async def delete_sample_by_id(sample_id: UUID) -> None:
-    with create_session() as session:
-        result: SampleEntity | None = session.exec(
+    async with create_async_session() as session:
+        result: SampleEntity | None = (await session.exec(
             select(SampleEntity).where(SampleEntity.id == sample_id)
-        ).one_or_none()
+        )).one_or_none()
         if result is not None:
-            session.delete(result)
-            session.commit()
+            await session.delete(result)
+            await session.commit()
         return None
 
 
