@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     app_db_password: str = "superpassword"
     app_db_min_con: int = 5
     app_db_max_con: int = 20
+    app_db_log_sql: bool = False
     # db settings end
 
 

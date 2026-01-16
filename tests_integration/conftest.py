@@ -44,6 +44,7 @@ def postgres_docker_container() -> Generator[DockerContainer, None, None]:
 
 @pytest.fixture
 def test_client(
+    log_db_statements: config.Settings,
     change_postgres_db_host: config.Settings,
     change_postgres_db_port: config.Settings,
 ) -> Generator[TestClient, None, None]:
@@ -99,6 +100,22 @@ def change_postgres_db_port(
     reload(customer)
     reload(sample_orm)
     reload(customer_dao)
+
+
+@pytest.fixture
+def log_db_statements(
+    postgres_docker_container: DockerContainer, monkeypatch
+) -> Generator[config.Settings, None, None]:
+    name = "APP_DB_LOG_SQL"
+    original_value = os.getenv(name)
+    new_value = "True"
+    # set new value, reload module and yield setting
+    new_settings = patch_env_var(monkeypatch, name, new_value)
+    reload(database_config)
+    yield new_settings
+    # reset to original value and reload module
+    patch_env_var(monkeypatch, name, original_value)
+    reload(database_config)
 
 
 @pytest.fixture

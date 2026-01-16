@@ -24,7 +24,8 @@ engine = create_engine(
     DATABASE_URL,
     pool_size=settings.app_db_min_con,
     max_overflow=settings.app_db_max_con - settings.app_db_min_con,
-    echo=True,
+    echo=settings.app_db_log_sql,
+    future=True,
 )
 
 
@@ -36,7 +37,7 @@ async_engine = create_async_engine(
     DATABASE_ASYNC_URL,
     pool_size=settings.app_db_min_con,
     max_overflow=settings.app_db_max_con - settings.app_db_min_con,
-    echo=True,
+    echo=settings.app_db_log_sql,
     future=True,
 )
 
