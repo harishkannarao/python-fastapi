@@ -1,4 +1,8 @@
+from typing import Annotated
+
 from databases import Database
+from databases.core import Transaction
+from fastapi.params import Depends
 from sqlmodel import Session, create_engine
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -19,6 +23,14 @@ database = Database(
     min_size=settings.app_db_min_con,
     max_size=settings.app_db_max_con,
 )
+
+
+async def create_transaction():
+    async with database.transaction() as transaction:
+        yield transaction
+
+
+TransactionDep = Annotated[Transaction, Depends(create_transaction)]
 
 engine = create_engine(
     DATABASE_URL,

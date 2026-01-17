@@ -1,6 +1,11 @@
 import os
 from importlib import reload
 from typing import Generator, MutableMapping, Any
+from unittest.mock import AsyncMock
+
+from pytest_mock import MockerFixture
+
+from app.db.database_config import create_transaction
 
 import pytest
 import structlog
@@ -14,11 +19,21 @@ import app.main as main
 def test_client(
     disable_db_migrations: config.Settings,
     disable_db_connection: config.Settings,
+    mock_create_transaction: AsyncMock,
 ) -> Generator[TestClient, None, None]:
     app = reload(main).app
+    app.dependency_overrides[create_transaction] = mock_create_transaction
     with TestClient(app) as client:
         yield client
     reload(main)
+
+
+@pytest.fixture
+def mock_create_transaction(mocker: MockerFixture) -> AsyncMock:
+    mock_transaction: AsyncMock = mocker.patch(
+        "app.db.database_config.database.transaction"
+    )
+    return mock_transaction
 
 
 @pytest.fixture

@@ -14,14 +14,6 @@ CUSTOMERS_ENDPOINT = "/context/customers"
 
 
 @pytest.fixture
-def mock_transaction(mocker: MockerFixture) -> AsyncMock:
-    mock_transaction: AsyncMock = mocker.patch(
-        "app.db.database_config.database.transaction"
-    )
-    return mock_transaction
-
-
-@pytest.fixture
 def mock_read_customers(mocker: MockerFixture) -> AsyncMock:
     mock_execute: AsyncMock = mocker.patch("app.dao.customer_dao.read_customers")
     return mock_execute
@@ -40,7 +32,7 @@ def mock_delete_all_customers(mocker: MockerFixture) -> AsyncMock:
 
 
 def test_customers_delete(
-    mock_transaction: AsyncMock,
+    mock_create_transaction: AsyncMock,
     mock_delete_all_customers: AsyncMock,
     test_client: TestClient,
 ):
@@ -54,7 +46,7 @@ def test_customers_delete(
 
 
 def test_customers_insert(
-    mock_transaction: AsyncMock,
+    mock_create_transaction: AsyncMock,
     mock_insert_customers: AsyncMock,
     test_client: TestClient,
 ):
@@ -77,7 +69,9 @@ def test_customers_insert(
 
 
 def test_customers_read(
-    mock_transaction: AsyncMock, mock_read_customers: AsyncMock, test_client: TestClient
+    mock_create_transaction: AsyncMock,
+    mock_read_customers: AsyncMock,
+    test_client: TestClient,
 ):
     customer1 = Customer(first_name="fname1", last_name="lname1")
     customer2 = Customer(first_name="fname2", last_name="lname2")
