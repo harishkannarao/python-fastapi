@@ -3,4 +3,4 @@ async def produce_value_async():
 
 
 def produce_value() -> str:
-    return "fromprod"
+    return "from-prod"
