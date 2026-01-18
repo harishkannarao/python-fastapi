@@ -41,9 +41,12 @@ engine = create_engine(
 )
 
 
-def create_session() -> Session:
-    return Session(engine)
+def create_session():
+    with Session(engine) as session:
+        yield session
 
+
+SessionDep = Annotated[Session, Depends(create_session)]
 
 async_engine = create_async_engine(
     DATABASE_ASYNC_URL,
@@ -54,5 +57,9 @@ async_engine = create_async_engine(
 )
 
 
-def create_async_session() -> AsyncSession:
-    return AsyncSession(async_engine)
+async def create_async_session():
+    async with AsyncSession(async_engine) as async_session:
+        yield async_session
+
+
+AsyncSessionDep = Annotated[AsyncSession, Depends(create_async_session)]
