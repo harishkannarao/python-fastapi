@@ -1,3 +1,7 @@
+from typing import Annotated
+
+from fastapi import Depends
+
 from app.service.service_b import produce_value_async as produce_async, produce_value
 
 
@@ -12,6 +16,9 @@ def get_value() -> str:
 async def get_dep_value_async():
     return await anext(produce_async())
 
+GetDepValueAsync = Annotated[str, Depends(get_dep_value_async)]
 
 def get_dep_value() -> str:
     return produce_value()
+
+GetDepValue = Annotated[str, Depends(get_dep_value)]
