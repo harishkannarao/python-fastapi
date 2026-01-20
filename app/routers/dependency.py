@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic.dataclasses import dataclass
 
 from app.service.service_a import (
@@ -23,8 +23,7 @@ async def read_direct() -> Resp:
 
 
 @router.get("/indirect")
-async def read_indirect() -> Resp:
-    value: str = get_dep_value()
+async def read_indirect(value: str = Depends(get_dep_value)) -> Resp:
     return Resp(value=value)
 
 
@@ -35,6 +34,5 @@ async def read_direct_async() -> Resp:
 
 
 @router.get("/indirect-async")
-async def read_indirect_async() -> Resp:
-    value: str = await get_dep_value_async()
+async def read_indirect_async(value: str = Depends(get_dep_value_async)) -> Resp:
     return Resp(value=value)
