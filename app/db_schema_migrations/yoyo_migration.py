@@ -3,10 +3,10 @@ import os
 import structlog
 import yoyo
 
-from app.config import settings
-
 
 def apply_db_migrations(mode: str = "apply"):
+    from app.config import settings
+
     logger = structlog.get_logger()
     logger.info(f"Running Yoyo Migrations: {mode.upper()}")
 

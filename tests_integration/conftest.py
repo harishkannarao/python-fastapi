@@ -12,11 +12,10 @@ from testcontainers.core.container import DockerContainer
 
 import app.config as config
 import app.dao.customer_dao as customer_dao
+import app.db.database_config as database_config
+import app.main as main
 import app.routers.customer as customer
 import app.routers.sample_orm as sample_orm
-import app.db.database_config as database_config
-import app.db_schema_migrations.yoyo_migration as yoyo_migration
-import app.main as main
 
 
 @pytest.fixture(scope="session")
@@ -63,7 +62,6 @@ def change_postgres_db_host(
     new_value = postgres_docker_container.get_container_host_ip()
     # set new value, reload module and yield setting
     new_settings = patch_env_var(monkeypatch, name, new_value)
-    reload(yoyo_migration)
     reload(database_config)
     reload(customer)
     reload(sample_orm)
@@ -71,7 +69,6 @@ def change_postgres_db_host(
     yield new_settings
     # reset to original value and reload module
     patch_env_var(monkeypatch, name, original_value)
-    reload(yoyo_migration)
     reload(database_config)
     reload(customer)
     reload(sample_orm)
@@ -87,7 +84,6 @@ def change_postgres_db_port(
     new_value = str(postgres_docker_container.get_exposed_port(5432))
     # set new value, reload module and yield setting
     new_settings = patch_env_var(monkeypatch, name, new_value)
-    reload(yoyo_migration)
     reload(database_config)
     reload(customer)
     reload(sample_orm)
@@ -95,7 +91,6 @@ def change_postgres_db_port(
     yield new_settings
     # reset to original value and reload module
     patch_env_var(monkeypatch, name, original_value)
-    reload(yoyo_migration)
     reload(database_config)
     reload(customer)
     reload(sample_orm)

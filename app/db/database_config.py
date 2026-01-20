@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Generator, AsyncGenerator, Any
 
 from databases import Database
 from databases.core import Transaction
@@ -41,7 +41,7 @@ engine = create_engine(
 )
 
 
-def create_session():
+def create_session() -> Generator[Session, Any, None]:
     with Session(engine) as session:
         yield session
 
@@ -57,7 +57,7 @@ async_engine = create_async_engine(
 )
 
 
-async def create_async_session():
+async def create_async_session() -> AsyncGenerator[AsyncSession, Any]:
     async with AsyncSession(async_engine) as async_session:
         yield async_session
 
