@@ -14,7 +14,8 @@ def get_value() -> str:
 
 
 async def get_dep_value_async():
-    return await anext(produce_async())
+    async for value in produce_async():
+        yield value
 
 GetDepValueAsync = Annotated[str, Depends(get_dep_value_async)]
 
