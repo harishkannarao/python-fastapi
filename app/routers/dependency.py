@@ -1,11 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from pydantic.dataclasses import dataclass
 
 from app.service.service_a import (
     get_value,
-    get_dep_value,
     get_value_async as get_async,
-    get_dep_value_async, GetDepValue, GetDepValueAsync,
+    GetDepValue, GetDepValueAsync,
 )
 
 router = APIRouter(prefix="/dependency", tags=["samples", "orm"])
