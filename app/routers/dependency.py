@@ -4,7 +4,8 @@ from pydantic.dataclasses import dataclass
 from app.service.service_a import (
     get_value,
     get_value_async as get_async,
-    GetDepValue, GetDepValueAsync,
+    GetDepValue,
+    GetDepValueAsync,
 )
 
 router = APIRouter(prefix="/dependency", tags=["samples", "orm"])

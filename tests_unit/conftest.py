@@ -1,8 +1,9 @@
 import os
 from importlib import reload
 from typing import Generator, MutableMapping, Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
+from databases.core import Transaction
 from pytest_mock import MockerFixture
 
 from app.db.database_config import create_transaction
@@ -13,6 +14,7 @@ from fastapi.testclient import TestClient
 
 import app.config as config
 import app.main as main
+from tests_unit.test_util import async_gen_helper
 
 
 @pytest.fixture
@@ -30,9 +32,11 @@ def test_client(
 
 @pytest.fixture
 def mock_create_transaction(mocker: MockerFixture) -> AsyncMock:
-    mock_transaction: AsyncMock = mocker.patch(
-        "app.db.database_config.database.transaction"
+    mock_produce_transaction: AsyncMock = mocker.patch(
+        "app.db.database_functions.create_transaction"
     )
+    mock_transaction = MagicMock(spec=Transaction)
+    mock_produce_transaction.return_value = async_gen_helper([mock_transaction])
     return mock_transaction
 
 

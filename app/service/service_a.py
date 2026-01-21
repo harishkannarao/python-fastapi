@@ -17,9 +17,12 @@ async def get_dep_value_async():
     async for value in produce_async():
         yield value
 
+
 GetDepValueAsync = Annotated[str, Depends(get_dep_value_async)]
+
 
 def get_dep_value() -> str:
     return produce_value()
+
 
 GetDepValue = Annotated[str, Depends(get_dep_value)]

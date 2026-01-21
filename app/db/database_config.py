@@ -1,8 +1,6 @@
-from typing import Annotated, Generator, AsyncGenerator, Any
+from typing import Generator, AsyncGenerator, Any
 
 from databases import Database
-from databases.core import Transaction
-from fastapi.params import Depends
 from sqlmodel import Session, create_engine
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -30,8 +28,6 @@ async def create_transaction():
         yield transaction
 
 
-TransactionDep = Annotated[Transaction, Depends(create_transaction)]
-
 engine = create_engine(
     DATABASE_URL,
     pool_size=settings.app_db_min_con,
@@ -46,8 +42,6 @@ def create_session() -> Generator[Session, Any, None]:
         yield session
 
 
-SessionDep = Annotated[Session, Depends(create_session)]
-
 async_engine = create_async_engine(
     DATABASE_ASYNC_URL,
     pool_size=settings.app_db_min_con,
@@ -60,6 +54,3 @@ async_engine = create_async_engine(
 async def create_async_session() -> AsyncGenerator[AsyncSession, Any]:
     async with AsyncSession(async_engine) as async_session:
         yield async_session
-
-
-AsyncSessionDep = Annotated[AsyncSession, Depends(create_async_session)]
