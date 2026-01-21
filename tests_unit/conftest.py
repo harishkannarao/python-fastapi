@@ -39,11 +39,11 @@ def test_client(
 
 
 @pytest.fixture
-def mock_create_transaction(mocker: MockerFixture) -> MagicMock:
+def mock_create_transaction(mocker: MockerFixture) -> AsyncMock:
     mock_produce_transaction: AsyncMock = mocker.patch(
         "app.db.database_dependencies.create_transaction"
     )
-    mock_transaction = MagicMock(spec=Transaction)
+    mock_transaction = AsyncMock(spec=Transaction)
     mock_produce_transaction.return_value = async_gen_helper([mock_transaction])
     return mock_transaction
 
@@ -59,11 +59,11 @@ def mock_session(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.fixture
-def mock_async_session(mocker: MockerFixture) -> MagicMock:
+def mock_async_session(mocker: MockerFixture) -> AsyncMock:
     mock_create_async_session: AsyncMock = mocker.patch(
         "app.db.database_dependencies.create_async_session"
     )
-    mock_async_session = MagicMock(spec=AsyncSession)
+    mock_async_session = AsyncMock(spec=AsyncSession)
     mock_create_async_session.return_value = async_gen_helper([mock_async_session])
     return mock_async_session
 
