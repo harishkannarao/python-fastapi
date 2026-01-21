@@ -6,7 +6,7 @@ from uuid import UUID
 
 from assertpy import assert_that
 from fastapi.testclient import TestClient
-from sqlalchemy import Select
+from sqlmodel import select
 
 from app.model.entity.sample_entity import SampleEntity
 from app.model.response.sample import Sample
@@ -37,12 +37,16 @@ def test_sample_orm_read_by_id(mock_async_session: AsyncMock, test_client: TestC
     assert_that(result).is_equal_to(expected)
 
     assert_that(mock_async_session.exec.call_args_list).is_length(1)
-    args, kwargs = mock_async_session.exec.call_args
-    sent_query = args[0]
+    args, kwargs = mock_async_session.exec.call_args_list[0]
+    actual_query = args[0]
+    actual_compiled_query = actual_query.compile()
 
-    assert_that(sent_query).is_instance_of(Select)
-    query_str = str(sent_query.compile())
-    assert_that(query_str).contains_ignoring_case("SELECT")
-    assert_that(query_str).contains_ignoring_case("sample_table")
-    assert_that(query_str).contains_ignoring_case("WHERE")
-    assert_that(query_str).contains_ignoring_case("sample_table.id")
+    expected_query = select(SampleEntity).where(SampleEntity.id == input_id)
+    expected_compiled_query = expected_query.compile()
+
+    assert_that(actual_compiled_query.string).is_equal_to(
+        expected_compiled_query.string
+    )
+    assert_that(actual_compiled_query.params).is_equal_to(
+        expected_compiled_query.params
+    )
