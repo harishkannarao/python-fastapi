@@ -37,7 +37,7 @@ def test_client(
 @pytest.fixture
 def mock_create_transaction(mocker: MockerFixture) -> AsyncMock:
     mock_produce_transaction: AsyncMock = mocker.patch(
-        "app.db.database_functions.create_transaction"
+        "app.db.database_dependencies.create_transaction"
     )
     mock_transaction = MagicMock(spec=Transaction)
     mock_produce_transaction.return_value = async_gen_helper([mock_transaction])

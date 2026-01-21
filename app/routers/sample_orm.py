@@ -7,7 +7,7 @@ from pydantic import RootModel
 from sqlalchemy import ScalarResult
 from sqlmodel import select, delete
 
-from app.db.database_functions import AsyncSessionDep, SessionDep
+from app.db.database_dependencies import AsyncSessionDep, SessionDep
 from app.model.entity.sample_entity import SampleEntity
 from app.model.request.sample import SampleCreate, SampleUpdate
 from app.model.response.sample import Sample

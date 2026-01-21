@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status
 
 from app.dao import customer_dao
-from app.db.database_functions import TransactionDep
+from app.db.database_dependencies import TransactionDep
 from app.model.customer import Customer
 
 router = APIRouter(prefix="/customers", tags=["users"])
