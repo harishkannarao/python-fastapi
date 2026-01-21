@@ -50,3 +50,16 @@ def test_sample_orm_read_by_id(mock_async_session: AsyncMock, test_client: TestC
     assert_that(actual_compiled_query.params).is_equal_to(
         expected_compiled_query.params
     )
+
+
+def test_sample_orm_read_by_id_returns_404(
+    mock_async_session: AsyncMock, test_client: TestClient
+):
+    input_id: UUID = uuid.uuid4()
+    mock_result: MagicMock = MagicMock()
+    mock_result.one_or_none.return_value = None
+    mock_async_session.exec.return_value = mock_result
+
+    response = test_client.get(f"{SAMPLE_ORM_ENDPOINT}/{input_id}")
+    assert_that(response.status_code).is_equal_to(404)
+    assert_that(response.json()).is_none()
