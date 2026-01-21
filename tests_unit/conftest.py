@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from databases.core import Transaction
 from pytest_mock import MockerFixture
+from pytest import MonkeyPatch
 
 from app.db.database_config import create_transaction
 
@@ -19,10 +20,13 @@ from tests_unit.test_util import async_gen_helper
 
 @pytest.fixture
 def test_client(
+    monkeypatch: MonkeyPatch,
     disable_db_migrations: config.Settings,
     disable_db_connection: config.Settings,
     mock_create_transaction: AsyncMock,
 ) -> Generator[TestClient, None, None]:
+    monkeypatch.setattr("app.db.database_config.engine", None)
+    monkeypatch.setattr("app.db.database_config.async_engine", None)
     app = reload(main).app
     app.dependency_overrides[create_transaction] = mock_create_transaction
     with TestClient(app) as client:
