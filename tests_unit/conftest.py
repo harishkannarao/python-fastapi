@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock, MagicMock
 from databases.core import Transaction
 from pytest_mock import MockerFixture
 from pytest import MonkeyPatch
+from sqlmodel import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.db.database_config import create_transaction
 
@@ -15,7 +17,7 @@ from fastapi.testclient import TestClient
 
 import app.config as config
 import app.main as main
-from tests_unit.test_util import async_gen_helper
+from tests_unit.test_util import async_gen_helper, gen_helper
 
 
 @pytest.fixture
@@ -23,7 +25,9 @@ def test_client(
     monkeypatch: MonkeyPatch,
     disable_db_migrations: config.Settings,
     disable_db_connection: config.Settings,
-    mock_create_transaction: AsyncMock,
+    mock_create_transaction: MagicMock,
+    mock_session: MagicMock,
+    mock_async_session: MagicMock,
 ) -> Generator[TestClient, None, None]:
     monkeypatch.setattr("app.db.database_config.engine", None)
     monkeypatch.setattr("app.db.database_config.async_engine", None)
@@ -35,13 +39,33 @@ def test_client(
 
 
 @pytest.fixture
-def mock_create_transaction(mocker: MockerFixture) -> AsyncMock:
+def mock_create_transaction(mocker: MockerFixture) -> MagicMock:
     mock_produce_transaction: AsyncMock = mocker.patch(
         "app.db.database_dependencies.create_transaction"
     )
     mock_transaction = MagicMock(spec=Transaction)
     mock_produce_transaction.return_value = async_gen_helper([mock_transaction])
     return mock_transaction
+
+
+@pytest.fixture
+def mock_session(mocker: MockerFixture) -> MagicMock:
+    mock_create_session: MagicMock = mocker.patch(
+        "app.db.database_dependencies.create_session"
+    )
+    mock_session = MagicMock(spec=Session)
+    mock_create_session.return_value = gen_helper([mock_session])
+    return mock_session
+
+
+@pytest.fixture
+def mock_async_session(mocker: MockerFixture) -> MagicMock:
+    mock_create_async_session: AsyncMock = mocker.patch(
+        "app.db.database_dependencies.create_async_session"
+    )
+    mock_async_session = MagicMock(spec=AsyncSession)
+    mock_create_async_session.return_value = async_gen_helper([mock_async_session])
+    return mock_async_session
 
 
 @pytest.fixture
