@@ -11,6 +11,7 @@ from app.logging.logging_config import setup_logging
 from app.middleware.process_time import ProcessTimeMiddleware
 from app.middleware.request_id import RequestIdMiddleware
 from app.routers.sample_orm import router as sample_router
+from app.routers.sample_jsonb_orm import router as sample_document_router
 from app.routers.customer import router as customer_router
 from app.routers.dependency import router as dependency_router
 
@@ -20,6 +21,7 @@ setup_logging(json_logs=settings.app_json_logs)
 context = FastAPI(openapi_url=settings.app_open_api_url)
 
 context.include_router(sample_router)
+context.include_router(sample_document_router)
 context.include_router(customer_router)
 context.include_router(dependency_router)
 
