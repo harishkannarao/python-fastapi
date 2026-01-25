@@ -1,20 +1,13 @@
-from datetime import datetime
 from typing import Any
 from uuid import UUID
 
 from pydantic.dataclasses import dataclass
 
-
-@dataclass(frozen=True)
-class DocumentMetadata:
-    id: UUID
-    tags: list[str]
+from app.model.response.sample_document import DocumentMetadata
 
 
 @dataclass(frozen=True)
-class SampleDocument:
-    id: UUID
+class SampleDocumentCreate:
     sample_id: UUID
     json_data: DocumentMetadata
     secondary_json_dict: dict[str, Any]
-    created_datetime: datetime

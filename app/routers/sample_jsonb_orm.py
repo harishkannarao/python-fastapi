@@ -1,12 +1,14 @@
-from typing import Any
+import uuid
+from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Response
 from fastapi.encoders import jsonable_encoder
-from sqlmodel import select, delete
+from sqlmodel import select, delete, desc
 
 from app.db.database_dependencies import AsyncSessionDep, SessionDep
 from app.model.entity.sample_documents_entity import SampleDocumentEntity
+from app.model.request.sample_document import SampleDocumentCreate
 from app.model.response.sample_document import SampleDocument
 
 router = APIRouter(prefix="/samples/jsonb/orm", tags=["samples", "orm", "jsonb"])
@@ -16,7 +18,13 @@ router = APIRouter(prefix="/samples/jsonb/orm", tags=["samples", "orm", "jsonb"]
 async def read_documents(
     session: AsyncSessionDep,
 ) -> list[SampleDocument]:
-    entities = (await session.exec(select(SampleDocumentEntity))).all()
+    entities = (
+        await session.exec(
+            select(SampleDocumentEntity).order_by(
+                desc(SampleDocumentEntity.created_datetime)
+            )
+        )
+    ).all()
     sample_documents = list(map(lambda e: SampleDocument(**e.model_dump()), entities))
     return sample_documents
 
@@ -57,11 +65,13 @@ async def read_sample_document_by_json_id(
 
 @router.put("")
 async def create_sample_document(
-    session: AsyncSessionDep, sample_document: SampleDocument
+    session: AsyncSessionDep, input_document: SampleDocumentCreate
 ) -> SampleDocument:
-    document_dict: dict[str, Any] = jsonable_encoder(sample_document)
-    document_dict["id"] = sample_document.id
-    sample_document_entity: SampleDocumentEntity = SampleDocumentEntity(**document_dict)
+    sample_document_entity: SampleDocumentEntity = SampleDocumentEntity(
+        id=uuid.uuid4(),
+        created_datetime=datetime.now(timezone.utc),
+        **jsonable_encoder(input_document),
+    )
     session.add(sample_document_entity)
     await session.commit()
     await session.refresh(sample_document_entity)

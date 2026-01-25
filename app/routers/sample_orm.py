@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Query, Response
 from pydantic import RootModel
 from sqlalchemy import ScalarResult
-from sqlmodel import select, delete
+from sqlmodel import select, delete, asc
 
 from app.db.database_dependencies import AsyncSessionDep, SessionDep
 from app.model.entity.sample_entity import SampleEntity
@@ -24,7 +24,7 @@ async def read_samples(
     entities = (
         await session.exec(
             select(SampleEntity)
-            .order_by(SampleEntity.created_datetime)
+            .order_by(asc(SampleEntity.created_datetime))
             .offset(offset)
             .limit(limit)
         )
