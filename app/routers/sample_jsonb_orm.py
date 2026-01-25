@@ -1,3 +1,4 @@
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Response
@@ -58,12 +59,9 @@ async def read_sample_document_by_json_id(
 async def create_sample_document(
     session: AsyncSessionDep, sample_document: SampleDocument
 ) -> SampleDocument:
-    sample_document_entity: SampleDocumentEntity = SampleDocumentEntity(
-        id=sample_document.id,
-        sample_id=sample_document.sample_id,
-        json_data=jsonable_encoder(sample_document.json_data),
-        secondary_json_dict=jsonable_encoder(sample_document.secondary_json_dict),
-    )
+    document_dict: dict[str, Any] = jsonable_encoder(sample_document)
+    document_dict["id"] = sample_document.id
+    sample_document_entity: SampleDocumentEntity = SampleDocumentEntity(**document_dict)
     session.add(sample_document_entity)
     await session.commit()
     await session.refresh(sample_document_entity)
