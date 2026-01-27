@@ -15,3 +15,11 @@ services:
       main:
         aliases:
           - python-fastapi-postgres
+  prism-mock-open-api:
+    container_name: prism-mock-open-api
+    image: "public.ecr.aws/logistics/stoplight/prism:3.2.7"
+    ports:
+      - "4010:4010"
+    volumes:
+      - ./sample-openapi-spec.json:/tmp/sample-openapi-spec.json
+    command: mock -h 0.0.0.0 /tmp/sample-openapi-spec.json
