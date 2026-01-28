@@ -10,6 +10,7 @@ from assertpy import assert_that
 from fastapi.testclient import TestClient
 from tenacity import Retrying, stop_after_delay, wait_fixed
 from testcontainers.core.container import DockerContainer
+from pytest_httpserver.httpserver import HTTPServer
 
 import app.config as config
 import app.dao.customer_dao as customer_dao
@@ -44,7 +45,7 @@ def postgres_docker_container() -> Generator[DockerContainer, None, None]:
 
 @pytest.fixture
 def test_client(
-    change_external_faq_api_url: str,
+    mock_external_faq_server: HTTPServer,
     log_db_statements: config.Settings,
     change_postgres_db_host: config.Settings,
     change_postgres_db_port: config.Settings,
@@ -56,12 +57,16 @@ def test_client(
 
 
 @pytest.fixture
-def change_external_faq_api_url(monkeypatch: MonkeyPatch) -> Generator[str, None, None]:
-    test_url: str = "https://test.example.com"
-    monkeypatch.setattr(
-        "app.routers.external_faq.settings.app_external_faq_api_base_url", test_url
-    )
-    yield test_url
+def mock_external_faq_server(
+    monkeypatch: MonkeyPatch,
+) -> Generator[HTTPServer, None, None]:
+    with HTTPServer() as httpserver:
+        print(f"Testing >>>> {httpserver.url_for('')}")
+        test_url: str = f"http://{httpserver.host}:{httpserver.port}"
+        monkeypatch.setattr(
+            "app.routers.external_faq.settings.app_external_faq_api_base_url", test_url
+        )
+        yield httpserver
 
 
 @pytest.fixture

@@ -21,6 +21,7 @@ dev = [
     "pytest-mock",
     "pytest-html",
     "pytest-asyncio",
+    "pytest-httpserver",
     "assertpy",
     "ruff",
     "tenacity",
