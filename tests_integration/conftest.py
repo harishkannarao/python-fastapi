@@ -4,6 +4,7 @@ from importlib import reload
 from typing import Generator, Any, MutableMapping
 
 import pytest
+from pytest import MonkeyPatch
 import structlog
 from assertpy import assert_that
 from fastapi.testclient import TestClient
@@ -43,6 +44,7 @@ def postgres_docker_container() -> Generator[DockerContainer, None, None]:
 
 @pytest.fixture
 def test_client(
+    change_external_faq_api_url: str,
     log_db_statements: config.Settings,
     change_postgres_db_host: config.Settings,
     change_postgres_db_port: config.Settings,
@@ -54,8 +56,17 @@ def test_client(
 
 
 @pytest.fixture
+def change_external_faq_api_url(monkeypatch: MonkeyPatch) -> Generator[str, None, None]:
+    test_url: str = "https://test.example.com"
+    monkeypatch.setattr(
+        "app.routers.external_faq.settings.app_external_faq_api_base_url", test_url
+    )
+    yield test_url
+
+
+@pytest.fixture
 def change_postgres_db_host(
-    postgres_docker_container: DockerContainer, monkeypatch
+    postgres_docker_container: DockerContainer, monkeypatch: MonkeyPatch
 ) -> Generator[config.Settings, None, None]:
     name = "APP_DB_HOST"
     original_value = os.getenv(name)
@@ -77,7 +88,7 @@ def change_postgres_db_host(
 
 @pytest.fixture
 def change_postgres_db_port(
-    postgres_docker_container: DockerContainer, monkeypatch
+    postgres_docker_container: DockerContainer, monkeypatch: MonkeyPatch
 ) -> Generator[config.Settings, None, None]:
     name = "APP_DB_PORT"
     original_value = os.getenv(name)
@@ -99,7 +110,7 @@ def change_postgres_db_port(
 
 @pytest.fixture
 def log_db_statements(
-    postgres_docker_container: DockerContainer, monkeypatch
+    postgres_docker_container: DockerContainer, monkeypatch: MonkeyPatch
 ) -> Generator[config.Settings, None, None]:
     name = "APP_DB_LOG_SQL"
     original_value = os.getenv(name)
@@ -114,7 +125,9 @@ def log_db_statements(
 
 
 @pytest.fixture
-def disable_open_api(monkeypatch) -> Generator[config.Settings, None, None]:
+def disable_open_api(
+    monkeypatch: MonkeyPatch,
+) -> Generator[config.Settings, None, None]:
     name = "APP_OPEN_API_URL"
     original_value = os.getenv(name)
     new_value = ""
@@ -124,7 +137,9 @@ def disable_open_api(monkeypatch) -> Generator[config.Settings, None, None]:
     patch_env_var(monkeypatch, name, original_value)
 
 
-def patch_env_var(monkeypatch, name: str, value: str | None) -> config.Settings:
+def patch_env_var(
+    monkeypatch: MonkeyPatch, name: str, value: str | None
+) -> config.Settings:
     if value is None:
         monkeypatch.delenv(name)
     else:

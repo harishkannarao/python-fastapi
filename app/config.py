@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     app_db_max_con: int = 20
     app_db_log_sql: bool = False
     # db settings end
+    app_external_faq_api_base_url: str = "https://www.example.com"
 
 
 settings = Settings()

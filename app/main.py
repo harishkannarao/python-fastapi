@@ -14,6 +14,7 @@ from app.routers.sample_orm import router as sample_router
 from app.routers.sample_jsonb_orm import router as sample_document_router
 from app.routers.customer import router as customer_router
 from app.routers.dependency import router as dependency_router
+from app.routers.external_faq import router as external_faq_router
 
 # Initialize logging at application startup
 setup_logging(json_logs=settings.app_json_logs)
@@ -24,6 +25,7 @@ context.include_router(sample_router)
 context.include_router(sample_document_router)
 context.include_router(customer_router)
 context.include_router(dependency_router)
+context.include_router(external_faq_router)
 
 
 @asynccontextmanager
