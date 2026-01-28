@@ -16,8 +16,6 @@ import app.config as config
 import app.dao.customer_dao as customer_dao
 import app.db.database_config as database_config
 import app.main as main
-import app.routers.customer as customer
-import app.routers.sample_orm as sample_orm
 
 
 @pytest.fixture(scope="session")
@@ -78,15 +76,11 @@ def change_postgres_db_host(
     # set new value, reload module and yield setting
     new_settings = patch_env_var(monkeypatch, name, new_value)
     reload(database_config)
-    reload(customer)
-    reload(sample_orm)
     reload(customer_dao)
     yield new_settings
     # reset to original value and reload module
     patch_env_var(monkeypatch, name, original_value)
     reload(database_config)
-    reload(customer)
-    reload(sample_orm)
     reload(customer_dao)
 
 
@@ -100,15 +94,11 @@ def change_postgres_db_port(
     # set new value, reload module and yield setting
     new_settings = patch_env_var(monkeypatch, name, new_value)
     reload(database_config)
-    reload(customer)
-    reload(sample_orm)
     reload(customer_dao)
     yield new_settings
     # reset to original value and reload module
     patch_env_var(monkeypatch, name, original_value)
     reload(database_config)
-    reload(customer)
-    reload(sample_orm)
     reload(customer_dao)
 
 
