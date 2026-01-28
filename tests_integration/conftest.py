@@ -61,7 +61,6 @@ def mock_external_faq_server(
     monkeypatch: MonkeyPatch,
 ) -> Generator[HTTPServer, None, None]:
     with HTTPServer() as httpserver:
-        print(f"Testing >>>> {httpserver.url_for('')}")
         test_url: str = f"http://{httpserver.host}:{httpserver.port}"
         monkeypatch.setattr(
             "app.routers.external_faq.settings.app_external_faq_api_base_url", test_url
