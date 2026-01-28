@@ -17,6 +17,8 @@ import app.dao.customer_dao as customer_dao
 import app.db.database_config as database_config
 import app.main as main
 
+DB_MODULES_TO_RELOAD = [database_config, customer_dao]
+
 
 @pytest.fixture(scope="session")
 def postgres_docker_container() -> Generator[DockerContainer, None, None]:
@@ -75,13 +77,13 @@ def change_postgres_db_host(
     new_value = postgres_docker_container.get_container_host_ip()
     # set new value, reload module and yield setting
     new_settings = patch_env_var(monkeypatch, name, new_value)
-    reload(database_config)
-    reload(customer_dao)
+    for mod in DB_MODULES_TO_RELOAD:
+        reload(mod)
     yield new_settings
     # reset to original value and reload module
     patch_env_var(monkeypatch, name, original_value)
-    reload(database_config)
-    reload(customer_dao)
+    for mod in DB_MODULES_TO_RELOAD:
+        reload(mod)
 
 
 @pytest.fixture
@@ -93,13 +95,13 @@ def change_postgres_db_port(
     new_value = str(postgres_docker_container.get_exposed_port(5432))
     # set new value, reload module and yield setting
     new_settings = patch_env_var(monkeypatch, name, new_value)
-    reload(database_config)
-    reload(customer_dao)
+    for mod in DB_MODULES_TO_RELOAD:
+        reload(mod)
     yield new_settings
     # reset to original value and reload module
     patch_env_var(monkeypatch, name, original_value)
-    reload(database_config)
-    reload(customer_dao)
+    for mod in DB_MODULES_TO_RELOAD:
+        reload(mod)
 
 
 @pytest.fixture
@@ -111,11 +113,13 @@ def log_db_statements(
     new_value = "True"
     # set new value, reload module and yield setting
     new_settings = patch_env_var(monkeypatch, name, new_value)
-    reload(database_config)
+    for mod in DB_MODULES_TO_RELOAD:
+        reload(mod)
     yield new_settings
     # reset to original value and reload module
     patch_env_var(monkeypatch, name, original_value)
-    reload(database_config)
+    for mod in DB_MODULES_TO_RELOAD:
+        reload(mod)
 
 
 @pytest.fixture
