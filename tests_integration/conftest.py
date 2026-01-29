@@ -8,6 +8,7 @@ from pytest import MonkeyPatch
 import structlog
 from assertpy import assert_that
 from fastapi.testclient import TestClient
+from sqlmodel import Session
 from tenacity import Retrying, stop_after_delay, wait_fixed
 from testcontainers.core.container import DockerContainer
 from pytest_httpserver.httpserver import HTTPServer
@@ -133,6 +134,35 @@ def disable_open_api(
     yield patch_env_var(monkeypatch, name, new_value)
     # reset to original value and reload module
     patch_env_var(monkeypatch, name, original_value)
+
+
+@pytest.fixture
+def get_session(
+    postgres_docker_container: DockerContainer, test_client: TestClient
+) -> Generator[Session, Any, None]:
+    from sqlmodel import Session, create_engine
+
+    db_ip: str = postgres_docker_container.get_container_host_ip()
+    db_port: str = str(postgres_docker_container.get_exposed_port(5432))
+    database_url = (
+        f"postgresql://superpassword:superpassword@{db_ip}:{db_port}/superpassword"
+    )
+    engine = create_engine(
+        database_url,
+        pool_size=10,
+        max_overflow=10,
+        echo=True,
+        future=True,
+    )
+    with Session(engine) as session:
+        yield session
+        engine.dispose()
+
+
+# @pytest.fixture
+# async def get_async_session(test_client: TestClient) -> AsyncGenerator[AsyncSession, Any]:
+#     async for session in create_async_session():
+#         yield session
 
 
 def patch_env_var(
