@@ -5,7 +5,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from contextlib import asynccontextmanager
 
 from app.config import settings
-from app.db.database_config import database
+from app.db.database_config import database, engine
 from app.db_schema_migrations.yoyo_migration import apply_db_migrations
 from app.logging.logging_config import setup_logging
 from app.middleware.process_time import ProcessTimeMiddleware
@@ -35,6 +35,8 @@ async def lifespan(_app: FastAPI):
     if settings.app_db_enabled:
         await database.connect()
     yield
+    if engine is not None:
+        engine.dispose()
     if settings.app_db_enabled:
         await database.disconnect()
 
