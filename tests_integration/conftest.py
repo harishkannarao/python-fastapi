@@ -5,6 +5,7 @@ from typing import Generator, Any, MutableMapping, AsyncGenerator
 
 import pytest
 import pytest_asyncio
+from databases import Database
 from pytest import MonkeyPatch
 import structlog
 from assertpy import assert_that
@@ -146,9 +147,7 @@ def get_session(
 
     db_ip: str = postgres_docker_container.get_container_host_ip()
     db_port: str = str(postgres_docker_container.get_exposed_port(5432))
-    database_url = (
-        f"postgresql://superpassword:superpassword@{db_ip}:{db_port}/superpassword"
-    )
+    database_url = f"postgresql://myuser:superpassword@{db_ip}:{db_port}/myuser"
     engine = create_engine(
         database_url,
         pool_size=10,
@@ -170,7 +169,9 @@ async def get_async_session(
 
     db_ip: str = postgres_docker_container.get_container_host_ip()
     db_port: str = str(postgres_docker_container.get_exposed_port(5432))
-    database_async_url = f"postgresql+asyncpg://superpassword:superpassword@{db_ip}:{db_port}/superpassword"
+    database_async_url = (
+        f"postgresql+asyncpg://myuser:superpassword@{db_ip}:{db_port}/myuser"
+    )
     async_engine = create_async_engine(
         database_async_url,
         pool_size=10,
@@ -181,6 +182,25 @@ async def get_async_session(
     async with AsyncSession(async_engine) as session:
         yield session
         await async_engine.dispose()
+
+
+@pytest_asyncio.fixture
+async def get_database(
+    postgres_docker_container: DockerContainer, test_client: TestClient
+) -> Generator[Database, None, None]:
+    db_ip: str = postgres_docker_container.get_container_host_ip()
+    db_port: str = str(postgres_docker_container.get_exposed_port(5432))
+    database_async_url = (
+        f"postgresql+asyncpg://myuser:superpassword@{db_ip}:{db_port}/myuser"
+    )
+    database = Database(
+        database_async_url,
+        min_size=5,
+        max_size=10,
+    )
+    await database.connect()
+    yield database
+    await database.disconnect()
 
 
 def patch_env_var(
