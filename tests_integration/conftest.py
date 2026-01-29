@@ -1,14 +1,16 @@
 import os
 import time
 from importlib import reload
-from typing import Generator, Any, MutableMapping
+from typing import Generator, Any, MutableMapping, AsyncGenerator
 
 import pytest
+import pytest_asyncio
 from pytest import MonkeyPatch
 import structlog
 from assertpy import assert_that
 from fastapi.testclient import TestClient
 from sqlmodel import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 from tenacity import Retrying, stop_after_delay, wait_fixed
 from testcontainers.core.container import DockerContainer
 from pytest_httpserver.httpserver import HTTPServer
@@ -159,10 +161,26 @@ def get_session(
         engine.dispose()
 
 
-# @pytest.fixture
-# async def get_async_session(test_client: TestClient) -> AsyncGenerator[AsyncSession, Any]:
-#     async for session in create_async_session():
-#         yield session
+@pytest_asyncio.fixture
+async def get_async_session(
+    postgres_docker_container: DockerContainer, test_client: TestClient
+) -> AsyncGenerator[AsyncSession, Any]:
+    from sqlalchemy.ext.asyncio import create_async_engine
+    from sqlmodel.ext.asyncio.session import AsyncSession
+
+    db_ip: str = postgres_docker_container.get_container_host_ip()
+    db_port: str = str(postgres_docker_container.get_exposed_port(5432))
+    database_async_url = f"postgresql+asyncpg://superpassword:superpassword@{db_ip}:{db_port}/superpassword"
+    async_engine = create_async_engine(
+        database_async_url,
+        pool_size=10,
+        max_overflow=10,
+        echo=True,
+        future=True,
+    )
+    async with AsyncSession(async_engine) as session:
+        yield session
+        await async_engine.dispose()
 
 
 def patch_env_var(
