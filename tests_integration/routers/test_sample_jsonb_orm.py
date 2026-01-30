@@ -21,8 +21,10 @@ SAMPLE_JSONB_ORM_ENDPOINT = "/context/samples/jsonb/orm"
 @pytest.fixture
 def delete_all_fixture(test_client: TestClient) -> Generator[None, None, None]:
     delete_all(test_client)
+    delete_all_samples(test_client)
     yield
     delete_all(test_client)
+    delete_all_samples(test_client)
 
 
 def test_sample_jsonb_orm_create(delete_all_fixture: None, test_client: TestClient):
@@ -43,6 +45,11 @@ def test_sample_jsonb_orm_create(delete_all_fixture: None, test_client: TestClie
 
 def delete_all(test_client: TestClient) -> None:
     delete_all_response: Response = test_client.delete(SAMPLE_JSONB_ORM_ENDPOINT)
+    assert_that(delete_all_response.status_code).is_equal_to(204)
+
+
+def delete_all_samples(test_client: TestClient) -> None:
+    delete_all_response: Response = test_client.delete(SAMPLE_ORM_ENDPOINT)
     assert_that(delete_all_response.status_code).is_equal_to(204)
 
 

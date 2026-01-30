@@ -1,6 +1,9 @@
 import uuid
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
+from typing import Generator
+
+import pytest
 from fastapi.encoders import jsonable_encoder
 
 from assertpy import assert_that
@@ -14,9 +17,14 @@ from app.model.response.sample import Sample
 SAMPLE_ORM_ENDPOINT = "/context/samples/orm"
 
 
-def test_sample_orm_create(test_client: TestClient):
+@pytest.fixture
+def delete_all_samples_fixture(test_client: TestClient) -> Generator[None, None, None]:
+    delete_all_samples(test_client)
+    yield
     delete_all_samples(test_client)
 
+
+def test_sample_orm_create(delete_all_samples_fixture: None, test_client: TestClient):
     request_entity: SampleCreate = SampleCreate(
         username=f"user-1-{uuid.uuid4()}",
         bool_field=True,
@@ -31,9 +39,9 @@ def test_sample_orm_create(test_client: TestClient):
     assert_created_response_entity(response_entity, request_entity)
 
 
-def test_sample_orm_read_by_id(test_client: TestClient):
-    delete_all_samples(test_client)
-
+def test_sample_orm_read_by_id(
+    delete_all_samples_fixture: None, test_client: TestClient
+):
     request_entity: SampleCreate = SampleCreate(
         username=f"user-1-{uuid.uuid4()}",
         bool_field=True,
@@ -55,9 +63,7 @@ def test_sample_orm_read_by_id(test_client: TestClient):
     assert_that(read_entity).is_equal_to(created_entity)
 
 
-def test_sample_orm_read_all(test_client: TestClient):
-    delete_all_samples(test_client)
-
+def test_sample_orm_read_all(delete_all_samples_fixture: None, test_client: TestClient):
     create_1: SampleCreate = SampleCreate(
         username=f"user-1-{uuid.uuid4()}",
         bool_field=True,
@@ -104,9 +110,9 @@ def test_sample_orm_read_all(test_client: TestClient):
     assert_that(empty_samples).is_empty()
 
 
-def test_sample_orm_read_all_with_pagination(test_client: TestClient):
-    delete_all_samples(test_client)
-
+def test_sample_orm_read_all_with_pagination(
+    delete_all_samples_fixture: None, test_client: TestClient
+):
     sample_1: Sample = create_random_sample(test_client)
     sample_2: Sample = create_random_sample(test_client)
     sample_3: Sample = create_random_sample(test_client)
@@ -161,9 +167,7 @@ def test_sample_orm_read_all_with_pagination(test_client: TestClient):
     assert_that(fourth_sample).contains_only(sample_4)
 
 
-def test_sample_orm_update(test_client: TestClient):
-    delete_all_samples(test_client)
-
+def test_sample_orm_update(delete_all_samples_fixture: None, test_client: TestClient):
     create_request: SampleCreate = SampleCreate(
         username=f"user-1-{uuid.uuid4()}",
         bool_field=True,
@@ -205,9 +209,9 @@ def test_sample_orm_update(test_client: TestClient):
     assert_that(second_update_response.status_code).is_equal_to(409)
 
 
-def test_sample_orm_delete_by_id(test_client: TestClient):
-    delete_all_samples(test_client)
-
+def test_sample_orm_delete_by_id(
+    delete_all_samples_fixture: None, test_client: TestClient
+):
     create_request: SampleCreate = SampleCreate(
         username=f"user-1-{uuid.uuid4()}",
         bool_field=True,
