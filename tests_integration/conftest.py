@@ -187,7 +187,7 @@ async def get_async_session(
 @pytest_asyncio.fixture
 async def get_database(
     postgres_docker_container: DockerContainer, test_client: TestClient
-) -> Generator[Database, None, None]:
+) -> AsyncGenerator[Database, None]:
     db_ip: str = postgres_docker_container.get_container_host_ip()
     db_port: str = str(postgres_docker_container.get_exposed_port(5432))
     database_async_url = (
