@@ -67,7 +67,8 @@ def mock_external_faq_server(
     with HTTPServer() as httpserver:
         test_url: str = f"http://{httpserver.host}:{httpserver.port}"
         monkeypatch.setattr(
-            "app.routers.external_faq.settings.app_external_faq_api_base_url", test_url
+            "app.http_client.faq_client.settings.app_external_faq_api_base_url",
+            test_url,
         )
         yield httpserver
 
