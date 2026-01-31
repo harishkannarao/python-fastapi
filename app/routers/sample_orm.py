@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -11,7 +10,7 @@ from app.db.database_dependencies import AsyncSessionDep, SessionDep
 from app.model.entity.sample_entity import SampleEntity
 from app.model.request.sample import SampleCreate, SampleUpdate
 from app.model.response.sample import Sample
-from app.dao.sample_orm_dao import read_samples, read_sample_by_id
+from app.dao.sample_orm_dao import read_samples, read_sample_by_id, create_sample
 
 router = APIRouter(prefix="/samples/orm", tags=["samples", "orm"])
 
@@ -36,16 +35,11 @@ async def read_sample_by_id_handler(
 
 
 @router.put("")
-async def create_sample(session: AsyncSessionDep, sample: SampleCreate) -> Sample:
-    now: datetime = datetime.now(timezone.utc)
-    sample_entity: SampleEntity = SampleEntity(
-        id=uuid.uuid4(), version=1, created_datetime=now, updated_datetime=now
-    )
-    sample_entity.sqlmodel_update(RootModel(sample).model_dump())
-    session.add(sample_entity)
-    await session.commit()
-    await session.refresh(sample_entity)
-    return Sample(**sample_entity.model_dump())
+async def create_sample_handler(
+    session: AsyncSessionDep, sample: SampleCreate
+) -> Sample:
+    result: Sample = await create_sample(session, sample)
+    return result
 
 
 @router.post("")
