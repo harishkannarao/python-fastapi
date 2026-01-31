@@ -1,10 +1,12 @@
 import uuid
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
+from pprint import pprint
 from typing import Generator
 
 import pytest
 from assertpy import assert_that
+from deepdiff import DeepDiff
 from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 from httpx import Response
@@ -52,21 +54,64 @@ def test_sample_jsonb_orm_read_all(delete_all_fixture: None, test_client: TestCl
     http_response = test_client.get(SAMPLE_JSONB_ORM_ENDPOINT)
     assert_that(http_response.status_code).is_equal_to(200)
     all_documents = [SampleDocument(**item) for item in http_response.json()]
-    assert_that(all_documents).is_length(2)
-    assert_that(
-        [
-            sample_document
-            for sample_document in all_documents
-            if sample_document.id == sample_document_1.id
-        ]
-    ).contains_only(sample_document_1)
-    assert_that(
-        [
-            sample_document
-            for sample_document in all_documents
-            if sample_document.id == sample_document_2.id
-        ]
-    ).contains_only(sample_document_2)
+    expected = [sample_document_1, sample_document_2]
+    assert_that(DeepDiff(expected, all_documents, ignore_order=True)).is_empty()
+
+
+def test_sample_jsonb_orm_by_sample_id(
+    delete_all_fixture: None, test_client: TestClient
+):
+    sample1 = create_random_sample(test_client)
+    sample2 = create_random_sample(test_client)
+
+    sample_document_1 = create_random_sample_document(test_client, sample1.id)
+    create_random_sample_document(test_client, sample2.id)
+    http_response = test_client.get(
+        f"{SAMPLE_JSONB_ORM_ENDPOINT}/{sample_document_1.id}"
+    )
+    assert_that(http_response.status_code).is_equal_to(200)
+    actual = SampleDocument(**http_response.json())
+    assert_that(DeepDiff(sample_document_1, actual, ignore_order=True)).is_empty()
+
+
+def test_sample_jsonb_orm_by_json_id(delete_all_fixture: None, test_client: TestClient):
+    sample1 = create_random_sample(test_client)
+    sample2 = create_random_sample(test_client)
+
+    create_random_sample_document(test_client, sample1.id)
+    sample_document_2 = create_random_sample_document(test_client, sample2.id)
+    http_response = test_client.get(
+        f"{SAMPLE_JSONB_ORM_ENDPOINT}/json_id/{sample_document_2.json_data.id}"
+    )
+    assert_that(http_response.status_code).is_equal_to(200)
+    actual = SampleDocument(**http_response.json())
+    diff = DeepDiff(sample_document_2, actual, ignore_order=True)
+    assert_that(diff).described_as(pprint(diff)).is_empty()
+
+
+def test_sample_jsonb_orm_delete_all(delete_all_fixture: None, test_client: TestClient):
+    sample1 = create_random_sample(test_client)
+    sample2 = create_random_sample(test_client)
+
+    create_random_sample_document(test_client, sample1.id)
+    create_random_sample_document(test_client, sample2.id)
+
+    initial_read_all_response = test_client.get(SAMPLE_JSONB_ORM_ENDPOINT)
+    assert_that(initial_read_all_response.status_code).is_equal_to(200)
+    initial_all_documents = [
+        SampleDocument(**item) for item in initial_read_all_response.json()
+    ]
+    assert_that(initial_all_documents).is_length(2)
+
+    http_delete_all_response = test_client.delete(f"{SAMPLE_JSONB_ORM_ENDPOINT}")
+    assert_that(http_delete_all_response.status_code).is_equal_to(204)
+
+    final_read_all_response = test_client.get(SAMPLE_JSONB_ORM_ENDPOINT)
+    assert_that(final_read_all_response.status_code).is_equal_to(200)
+    final_all_documents = [
+        SampleDocument(**item) for item in final_read_all_response.json()
+    ]
+    assert_that(final_all_documents).is_length(0)
 
 
 def delete_all(test_client: TestClient) -> None:
