@@ -25,4 +25,5 @@ dev = [
     "assertpy",
     "ruff",
     "tenacity",
+    "deepdiff",
 ]

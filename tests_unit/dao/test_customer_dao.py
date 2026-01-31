@@ -5,7 +5,7 @@ import pytest
 from assertpy import assert_that
 from fastapi.encoders import jsonable_encoder
 from pytest_mock import MockerFixture
-
+from deepdiff import DeepDiff
 from app.dao import customer_dao
 from app.model.customer import Customer
 
@@ -52,9 +52,8 @@ async def test_customers_insert(mock_execute_many: AsyncMock):
         "INSERT INTO CUSTOMERS(FIRST_NAME, LAST_NAME) VALUES (:first_name, :last_name)"
     )
     inserted_rows: list[dict[str, Any]] = mock_execute_many.call_args.kwargs["values"]
-    assert_that(inserted_rows).is_length(2)
-    assert_that(inserted_rows).contains(jsonable_encoder(customer1))
-    assert_that(inserted_rows).contains(jsonable_encoder(customer2))
+    expected = jsonable_encoder([customer2, customer1])
+    assert_that(DeepDiff(expected, inserted_rows, ignore_order=True)).is_empty()
 
 
 @pytest.mark.asyncio
