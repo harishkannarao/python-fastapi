@@ -157,8 +157,9 @@ def get_session(
         future=True,
     )
     with Session(engine) as session:
-        yield session
-        engine.dispose()
+        with session.begin():
+            yield session
+    engine.dispose()
 
 
 @pytest_asyncio.fixture
@@ -181,8 +182,9 @@ async def get_async_session(
         future=True,
     )
     async with AsyncSession(async_engine) as session:
-        yield session
-        await async_engine.dispose()
+        async with session.begin():
+            yield session
+    await async_engine.dispose()
 
 
 @pytest_asyncio.fixture

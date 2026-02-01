@@ -73,7 +73,7 @@ async def create_sample_document(
         **jsonable_encoder(input_document),
     )
     session.add(sample_document_entity)
-    await session.commit()
+    await session.flush()
     await session.refresh(sample_document_entity)
     return SampleDocument(**sample_document_entity.model_dump())
 
@@ -81,5 +81,5 @@ async def create_sample_document(
 @router.delete("", status_code=204)
 async def delete_all(session: SessionDep) -> None:
     session.exec(delete(SampleDocumentEntity))
-    session.commit()
+    session.flush()
     return None

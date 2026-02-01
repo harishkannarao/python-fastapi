@@ -42,6 +42,6 @@ async def create_sample(session: AsyncSession, sample: SampleCreate) -> Sample:
     )
     sample_entity.sqlmodel_update(RootModel(sample).model_dump())
     session.add(sample_entity)
-    await session.commit()
+    await session.flush()
     await session.refresh(sample_entity)
     return Sample(**sample_entity.model_dump())

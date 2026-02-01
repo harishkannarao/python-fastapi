@@ -60,7 +60,7 @@ async def update_sample(
     found_sample.updated_datetime = datetime.now(timezone.utc)
     found_sample.version = sample.new_version
     session.add(found_sample)
-    session.commit()
+    session.flush()
     session.refresh(found_sample)
     return Sample(**found_sample.model_dump())
 
@@ -72,12 +72,12 @@ async def delete_sample_by_id(session: AsyncSessionDep, sample_id: UUID) -> None
     ).one_or_none()
     if result is not None:
         await session.delete(result)
-        await session.commit()
+        await session.flush()
     return None
 
 
 @router.delete("", status_code=204)
 async def delete_all(session: SessionDep) -> None:
     session.exec(delete(SampleEntity))
-    session.commit()
+    session.flush()
     return None

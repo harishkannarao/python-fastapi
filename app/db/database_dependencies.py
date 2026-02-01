@@ -22,7 +22,8 @@ TransactionDep = Annotated[Transaction, Depends(create_transaction_dep)]
 
 def create_session_dep() -> Generator[Session, Any, None]:
     for session in create_session():
-        yield session
+        with session.begin():
+            yield session
 
 
 SessionDep = Annotated[Session, Depends(create_session_dep)]
@@ -30,7 +31,8 @@ SessionDep = Annotated[Session, Depends(create_session_dep)]
 
 async def create_async_session_dep() -> AsyncGenerator[AsyncSession, Any]:
     async for async_session in create_async_session():
-        yield async_session
+        async with async_session.begin():
+            yield async_session
 
 
 AsyncSessionDep = Annotated[AsyncSession, Depends(create_async_session_dep)]
