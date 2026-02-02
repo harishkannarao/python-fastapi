@@ -1,13 +1,15 @@
-import uuid
-from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Response
-from fastapi.encoders import jsonable_encoder
-from sqlmodel import select, delete, desc
 
+from app.dao.sample_jsonb_orm_dao import (
+    read_documents,
+    read_sample_document_by_id,
+    read_sample_document_by_json_id,
+    create_sample_document,
+    delete_all,
+)
 from app.db.database_dependencies import AsyncSessionDep, SessionDep
-from app.model.entity.sample_documents_entity import SampleDocumentEntity
 from app.model.request.sample_document import SampleDocumentCreate
 from app.model.response.sample_document import SampleDocument
 
@@ -15,71 +17,43 @@ router = APIRouter(prefix="/samples/jsonb/orm", tags=["samples", "orm", "jsonb"]
 
 
 @router.get("")
-async def read_documents(
+async def read_documents_handler(
     session: AsyncSessionDep,
 ) -> list[SampleDocument]:
-    entities = (
-        await session.exec(
-            select(SampleDocumentEntity).order_by(
-                desc(SampleDocumentEntity.created_datetime)
-            )
-        )
-    ).all()
-    sample_documents = list(map(lambda e: SampleDocument(**e.model_dump()), entities))
-    return sample_documents
+    return await read_documents(session)
 
 
 @router.get("/{sample_document_id}")
-async def read_sample_document_by_id(
+async def read_sample_document_by_id_handler(
     session: AsyncSessionDep, sample_document_id: UUID, response: Response
 ) -> SampleDocument | None:
-    result: SampleDocumentEntity | None = (
-        await session.exec(
-            select(SampleDocumentEntity).where(
-                SampleDocumentEntity.id == sample_document_id
-            )
-        )
-    ).one_or_none()
+    result: SampleDocument | None = await read_sample_document_by_id(
+        session, sample_document_id
+    )
     if result is None:
         response.status_code = 404
-        return None
-    return SampleDocument(**result.model_dump())
+    return result
 
 
 @router.get("/json_id/{json_id}")
-async def read_sample_document_by_json_id(
+async def read_sample_document_by_json_id_handler(
     session: AsyncSessionDep, json_id: str, response: Response
 ) -> SampleDocument | None:
-    result: SampleDocumentEntity | None = (
-        await session.exec(
-            select(SampleDocumentEntity).where(
-                SampleDocumentEntity.json_data["id"].astext == json_id
-            )
-        )
-    ).one_or_none()
+    result: SampleDocument | None = await read_sample_document_by_json_id(
+        session, json_id
+    )
     if result is None:
         response.status_code = 404
-        return None
-    return SampleDocument(**result.model_dump())
+    return result
 
 
 @router.put("")
-async def create_sample_document(
+async def create_sample_document_handler(
     session: AsyncSessionDep, input_document: SampleDocumentCreate
 ) -> SampleDocument:
-    sample_document_entity: SampleDocumentEntity = SampleDocumentEntity(
-        id=uuid.uuid4(),
-        created_datetime=datetime.now(timezone.utc),
-        **jsonable_encoder(input_document),
-    )
-    session.add(sample_document_entity)
-    await session.flush()
-    await session.refresh(sample_document_entity)
-    return SampleDocument(**sample_document_entity.model_dump())
+    return await create_sample_document(session, input_document)
 
 
 @router.delete("", status_code=204)
-async def delete_all(session: SessionDep) -> None:
-    session.exec(delete(SampleDocumentEntity))
-    session.flush()
-    return None
+async def delete_all_handler(session: SessionDep) -> None:
+    return await delete_all(session)
