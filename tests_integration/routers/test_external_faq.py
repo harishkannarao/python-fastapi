@@ -30,3 +30,27 @@ def test_external_faq_get(
     assert_that(requests_made).is_length(1)
     assert_that(requests_made[0].path).is_equal_to("/faqs")
     assert_that(requests_made[0].method).is_equal_to("GET")
+
+
+def test_external_faq_by_id_get(
+    mock_external_faq_server: HTTPServer,
+    test_client: TestClient,
+):
+    input_faq_id: int = 2
+    external_faq_response: dict[str, Any] = {
+        "name": "faq-2",
+        "tag": "product",
+        "id": input_faq_id,
+    }
+    mock_external_faq_server.expect_request(
+        f"/faqs/{input_faq_id}", method="GET"
+    ).respond_with_json(external_faq_response)
+
+    get_response: Response = test_client.get(f"{EXTERNAL_FAQ_ENDPOINT}/{input_faq_id}")
+    assert_that(get_response.status_code).is_equal_to(200)
+    assert_that(get_response.json()).is_equal_to(external_faq_response)
+
+    requests_made: list[Request] = [req for req, res in mock_external_faq_server.log]
+    assert_that(requests_made).is_length(1)
+    assert_that(requests_made[0].path).is_equal_to(f"/faqs/{input_faq_id}")
+    assert_that(requests_made[0].method).is_equal_to("GET")
