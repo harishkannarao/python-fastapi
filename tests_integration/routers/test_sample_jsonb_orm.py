@@ -129,7 +129,9 @@ def create_random_sample_document(
 ) -> SampleDocument:
     request_entity = SampleDocumentCreate(
         sample_id=sample_id,
-        json_data=DocumentMetadata(id=uuid.uuid4(), tags=tuple([f"tag-{uuid.uuid4()}"])),
+        json_data=DocumentMetadata(
+            id=uuid.uuid4(), tags=tuple([f"tag-{uuid.uuid4()}"])
+        ),
         secondary_json_dict={"key": f"value-{uuid.uuid4()}"},
     )
     http_response = test_client.put(
