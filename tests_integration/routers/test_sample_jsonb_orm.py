@@ -34,7 +34,7 @@ def test_sample_jsonb_orm_create(delete_all_fixture: None, test_client: TestClie
 
     request_entity: SampleDocumentCreate = SampleDocumentCreate(
         sample_id=sample.id,
-        json_data=DocumentMetadata(id=uuid.uuid4(), tags=["tag1", "tag2"]),
+        json_data=DocumentMetadata(id=uuid.uuid4(), tags=tuple(["tag1", "tag2"])),
         secondary_json_dict={"key": "value"},
     )
     http_response = test_client.put(
@@ -129,7 +129,7 @@ def create_random_sample_document(
 ) -> SampleDocument:
     request_entity = SampleDocumentCreate(
         sample_id=sample_id,
-        json_data=DocumentMetadata(id=uuid.uuid4(), tags=[f"tag-{uuid.uuid4()}"]),
+        json_data=DocumentMetadata(id=uuid.uuid4(), tags=tuple([f"tag-{uuid.uuid4()}"])),
         secondary_json_dict={"key": f"value-{uuid.uuid4()}"},
     )
     http_response = test_client.put(
