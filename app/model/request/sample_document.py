@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Mapping
 from uuid import UUID
 
 from pydantic.dataclasses import dataclass
@@ -10,4 +10,4 @@ from app.model.response.sample_document import DocumentMetadata
 class SampleDocumentCreate:
     sample_id: UUID
     json_data: DocumentMetadata
-    secondary_json_dict: dict[str, Any]
+    secondary_json_dict: Mapping[str, Any]
