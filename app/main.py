@@ -1,5 +1,3 @@
-from typing import Any
-
 import structlog
 import uvicorn
 from fastapi import FastAPI
@@ -19,7 +17,7 @@ from app.db.database_config import database, engine
 from app.db_schema_migrations.yoyo_migration import apply_db_migrations
 from app.logging.logging_config import setup_logging
 from app.middleware.process_time import ProcessTimeMiddleware
-from app.middleware.request_id import RequestIdMiddleware
+from app.middleware.request_id import RequestIdMiddleware, create_request_context
 from app.routers.sample_orm import router as sample_router
 from app.routers.sample_jsonb_orm import router as sample_document_router
 from app.routers.customer import router as customer_router
@@ -65,15 +63,10 @@ app.add_middleware(
 
 @app.exception_handler(Exception)
 async def universal_exception_handler(request: Request, exc: Exception):
-    request_id = request.state.request_id
-    request_context: dict[str, Any] = {
-        "request_id": request_id,
-        "request_method": request.method,
-        "request_path": request.url.path,
-    }
     logger = structlog.get_logger()
     logger.info(
-        f"Unexpected Internal Server Error!: {repr(exc)}", extra=request_context
+        f"Unexpected Internal Server Error!: {repr(exc)}",
+        **(create_request_context(request)),
     )
     return JSONResponse(
         status_code=500, content={"error": "Unexpected Internal Server Error!"}
@@ -82,27 +75,17 @@ async def universal_exception_handler(request: Request, exc: Exception):
 
 @app.exception_handler(StarletteHTTPException)
 async def custom_http_exception_handler(request, exc):
-    request_id = request.state.request_id
-    request_context: dict[str, Any] = {
-        "request_id": request_id,
-        "request_method": request.method,
-        "request_path": request.url.path,
-    }
     logger = structlog.get_logger()
-    logger.info(f"An HTTP error!: {repr(exc)}", extra=request_context)
+    logger.info(f"An HTTP error!: {repr(exc)}", **(create_request_context(request)))
     return await http_exception_handler(request, exc)
 
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
-    request_id = request.state.request_id
-    request_context: dict[str, Any] = {
-        "request_id": request_id,
-        "request_method": request.method,
-        "request_path": request.url.path,
-    }
     logger = structlog.get_logger()
-    logger.info(f"The client sent invalid data!: {exc}", extra=request_context)
+    logger.info(
+        f"The client sent invalid data!: {exc}", **(create_request_context(request))
+    )
     return await request_validation_exception_handler(request, exc)
 
 

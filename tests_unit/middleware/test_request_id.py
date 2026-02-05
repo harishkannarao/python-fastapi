@@ -18,7 +18,7 @@ def test_new_request_id_when_not_supplied_in_request(
         filter(lambda entry: entry["event"] == "Request finished", captured_logs)
     )
     assert len(filtered_logs) >= 1
-    assert filtered_logs[0]["extra"]["request_id"] == request_id
+    assert filtered_logs[0]["request_id"] == request_id
 
 
 def test_returns_request_id_when_supplied_in_request(
@@ -34,4 +34,4 @@ def test_returns_request_id_when_supplied_in_request(
         filter(lambda entry: entry["event"] == "Request finished", captured_logs)
     )
     assert len(filtered_logs) >= 1
-    assert filtered_logs[0]["extra"]["request_id"] == request_id
+    assert filtered_logs[0]["request_id"] == request_id
