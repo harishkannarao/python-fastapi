@@ -45,11 +45,16 @@ def test_sample_jsonb_orm_create(delete_all_fixture: None, test_client: TestClie
     assert_created_response_entity(response_entity, request_entity)
 
 
-@pytest.mark.parametrize("raise_server_exceptions_fixture", [False], indirect=True)
+@pytest.mark.parametrize(
+    "raise_server_exceptions_fixture, expected_status",
+    [(False, 500)],
+    indirect=["raise_server_exceptions_fixture"],
+)
 def test_sample_jsonb_orm_create_with_duplicate_json_id(
     raise_server_exceptions_fixture: bool,
     delete_all_fixture: None,
     test_client: TestClient,
+    expected_status: int,
 ):
     sample = create_random_sample(test_client)
 
@@ -73,7 +78,9 @@ def test_sample_jsonb_orm_create_with_duplicate_json_id(
         SAMPLE_JSONB_ORM_ENDPOINT,
         json=jsonable_encoder(request_entity_with_duplicate_id),
     )
-    assert_that(http_response_with_duplicate_id.status_code).is_equal_to(500)
+    assert_that(http_response_with_duplicate_id.status_code).is_equal_to(
+        expected_status
+    )
 
 
 def test_sample_jsonb_orm_read_all(delete_all_fixture: None, test_client: TestClient):
