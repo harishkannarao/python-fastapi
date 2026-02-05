@@ -45,8 +45,11 @@ def test_sample_jsonb_orm_create(delete_all_fixture: None, test_client: TestClie
     assert_created_response_entity(response_entity, request_entity)
 
 
+@pytest.mark.parametrize("raise_server_exceptions_fixture", [False], indirect=True)
 def test_sample_jsonb_orm_create_with_duplicate_json_id(
-    delete_all_fixture: None, test_client: TestClient
+    raise_server_exceptions_fixture: bool,
+    delete_all_fixture: None,
+    test_client: TestClient,
 ):
     sample = create_random_sample(test_client)
 

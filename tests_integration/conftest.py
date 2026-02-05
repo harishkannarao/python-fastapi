@@ -48,14 +48,23 @@ def postgres_docker_container() -> Generator[DockerContainer, None, None]:
 
 
 @pytest.fixture
+def raise_server_exceptions_fixture(request) -> bool:
+    raise_exceptions = getattr(request, "param", True)
+    return raise_exceptions
+
+
+@pytest.fixture
 def test_client(
     mock_external_faq_server: HTTPServer,
     log_db_statements: config.Settings,
     change_postgres_db_host: config.Settings,
     change_postgres_db_port: config.Settings,
+    raise_server_exceptions_fixture: bool,
 ) -> Generator[TestClient, None, None]:
     app = reload(main).app
-    with TestClient(app, raise_server_exceptions=False) as client:
+    with TestClient(
+        app, raise_server_exceptions=raise_server_exceptions_fixture
+    ) as client:
         yield client
     reload(main)
 
