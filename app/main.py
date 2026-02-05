@@ -1,8 +1,18 @@
+from typing import Any
+
 import structlog
 import uvicorn
 from fastapi import FastAPI
 from starlette.middleware.base import BaseHTTPMiddleware
 from contextlib import asynccontextmanager
+from fastapi.exception_handlers import (
+    http_exception_handler,
+    request_validation_exception_handler,
+)
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from fastapi.responses import JSONResponse
+from fastapi import Request
 
 from app.config import settings
 from app.db.database_config import database, engine
@@ -51,6 +61,49 @@ app.add_middleware(
 app.add_middleware(
     BaseHTTPMiddleware, dispatch=RequestIdMiddleware(header_name="x-request-id")
 )
+
+
+@app.exception_handler(Exception)
+async def universal_exception_handler(request: Request, exc: Exception):
+    request_id = request.state.request_id
+    request_context: dict[str, Any] = {
+        "request_id": request_id,
+        "request_method": request.method,
+        "request_path": request.url.path,
+    }
+    logger = structlog.get_logger()
+    logger.info(
+        f"Unexpected Internal Server Error!: {repr(exc)}", extra=request_context
+    )
+    return JSONResponse(
+        status_code=500, content={"error": "Unexpected Internal Server Error!"}
+    )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def custom_http_exception_handler(request, exc):
+    request_id = request.state.request_id
+    request_context: dict[str, Any] = {
+        "request_id": request_id,
+        "request_method": request.method,
+        "request_path": request.url.path,
+    }
+    logger = structlog.get_logger()
+    logger.info(f"An HTTP error!: {repr(exc)}", extra=request_context)
+    return await http_exception_handler(request, exc)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    request_id = request.state.request_id
+    request_context: dict[str, Any] = {
+        "request_id": request_id,
+        "request_method": request.method,
+        "request_path": request.url.path,
+    }
+    logger = structlog.get_logger()
+    logger.info(f"The client sent invalid data!: {exc}", extra=request_context)
+    return await request_validation_exception_handler(request, exc)
 
 
 @app.get("/")

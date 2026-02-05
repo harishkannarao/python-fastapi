@@ -55,7 +55,7 @@ def test_client(
     change_postgres_db_port: config.Settings,
 ) -> Generator[TestClient, None, None]:
     app = reload(main).app
-    with TestClient(app) as client:
+    with TestClient(app, raise_server_exceptions=False) as client:
         yield client
     reload(main)
 

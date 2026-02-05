@@ -16,6 +16,8 @@ class RequestIdMiddleware:
         if request_id is None:
             request_id = str(uuid.uuid4())
 
+        request.state.request_id = request_id
+
         request_context: dict[str, Any] = {
             "request_id": request_id,
             "request_method": request.method,

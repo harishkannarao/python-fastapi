@@ -45,6 +45,34 @@ def test_sample_jsonb_orm_create(delete_all_fixture: None, test_client: TestClie
     assert_created_response_entity(response_entity, request_entity)
 
 
+def test_sample_jsonb_orm_create_with_duplicate_json_id(
+    delete_all_fixture: None, test_client: TestClient
+):
+    sample = create_random_sample(test_client)
+
+    request_entity: SampleDocumentCreate = SampleDocumentCreate(
+        sample_id=sample.id,
+        json_data=DocumentMetadata(id=uuid.uuid4(), tags=tuple(["tag1", "tag2"])),
+        secondary_json_dict={"key": "value"},
+    )
+    http_response = test_client.put(
+        SAMPLE_JSONB_ORM_ENDPOINT, json=jsonable_encoder(request_entity)
+    )
+    assert_that(http_response.status_code).is_equal_to(200)
+    request_entity_with_duplicate_id: SampleDocumentCreate = SampleDocumentCreate(
+        sample_id=sample.id,
+        json_data=DocumentMetadata(
+            id=request_entity.json_data.id, tags=tuple(["tag1", "tag2"])
+        ),
+        secondary_json_dict={"key": "value"},
+    )
+    http_response_with_duplicate_id = test_client.put(
+        SAMPLE_JSONB_ORM_ENDPOINT,
+        json=jsonable_encoder(request_entity_with_duplicate_id),
+    )
+    assert_that(http_response_with_duplicate_id.status_code).is_equal_to(500)
+
+
 def test_sample_jsonb_orm_read_all(delete_all_fixture: None, test_client: TestClient):
     sample1 = create_random_sample(test_client)
     sample2 = create_random_sample(test_client)
