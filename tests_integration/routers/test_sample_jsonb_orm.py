@@ -46,12 +46,12 @@ def test_sample_jsonb_orm_create(delete_all_fixture: None, test_client: TestClie
 
 
 @pytest.mark.parametrize(
-    "raise_server_exceptions_fixture, expected_status",
+    "raise_server_exceptions, expected_status",
     [(False, 500)],
-    indirect=["raise_server_exceptions_fixture"],
+    indirect=["raise_server_exceptions"],
 )
 def test_sample_jsonb_orm_create_with_duplicate_json_id(
-    raise_server_exceptions_fixture: bool,
+    raise_server_exceptions: bool,
     delete_all_fixture: None,
     test_client: TestClient,
     expected_status: int,
