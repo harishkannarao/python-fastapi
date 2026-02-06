@@ -62,6 +62,7 @@ app.add_middleware(
 
 
 @app.exception_handler(Exception)
+@context.exception_handler(Exception)
 async def universal_exception_handler(request: Request, exc: Exception):
     logger = structlog.get_logger()
     logger.error(
@@ -74,14 +75,16 @@ async def universal_exception_handler(request: Request, exc: Exception):
 
 
 @app.exception_handler(StarletteHTTPException)
-async def custom_http_exception_handler(request, exc):
+@context.exception_handler(StarletteHTTPException)
+async def custom_http_exception_handler(request, exc: StarletteHTTPException):
     logger = structlog.get_logger()
     logger.warning(f"An HTTP error!: {repr(exc)}", **(create_request_context(request)))
     return await http_exception_handler(request, exc)
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request, exc):
+@context.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc: RequestValidationError):
     logger = structlog.get_logger()
     logger.warning(
         f"The client sent invalid data!: {exc}", **(create_request_context(request))

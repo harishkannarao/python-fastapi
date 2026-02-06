@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 from pprint import pprint
-from typing import Generator
+from typing import Generator, Any
 
 import pytest
 from assertpy import assert_that
@@ -47,7 +47,7 @@ def test_sample_jsonb_orm_create(delete_all_fixture: None, test_client: TestClie
 
 @pytest.mark.parametrize(
     "raise_server_exceptions, expected_status",
-    [(False, 500)],
+    [(False, 409)],
     indirect=["raise_server_exceptions"],
 )
 def test_sample_jsonb_orm_create_with_duplicate_json_id(
@@ -81,6 +81,10 @@ def test_sample_jsonb_orm_create_with_duplicate_json_id(
     assert_that(http_response_with_duplicate_id.status_code).is_equal_to(
         expected_status
     )
+    expected_body: dict[str, Any] = {
+        "detail": {"key": "$.json_id.id", "value": str(request_entity.json_data.id)}
+    }
+    assert_that(http_response_with_duplicate_id.json()).is_equal_to(expected_body)
 
 
 def test_sample_jsonb_orm_read_all(delete_all_fixture: None, test_client: TestClient):

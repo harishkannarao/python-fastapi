@@ -1,6 +1,8 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Response
+import structlog
+from fastapi import APIRouter, Response, HTTPException
+from sqlalchemy.exc import IntegrityError
 
 from app.dao.sample_jsonb_orm_dao import (
     read_documents,
@@ -51,7 +53,15 @@ async def read_sample_document_by_json_id_handler(
 async def create_sample_document_handler(
     session: AsyncSessionDep, input_document: SampleDocumentCreate
 ) -> SampleDocument:
-    return await create_sample_document(session, input_document)
+    try:
+        return await create_sample_document(session, input_document)
+    except IntegrityError as ie:
+        logger = structlog.get_logger()
+        logger.error(f"IntegrityError!: {repr(ie)}")
+        raise HTTPException(
+            status_code=409,
+            detail={"key": "$.json_id.id", "value": str(input_document.json_data.id)},
+        )
 
 
 @router.delete("", status_code=204)
