@@ -58,6 +58,34 @@ Docker dependencies needs to be started using docker compose before running the 
 
     http://localhost:8000/context/docs
 
+### Run a specific unit test file / test function
+
+Run all tests in a directory or module
+
+    make tests_unit_specific UNIT_TEST=tests_unit/dao
+
+Run all tests in a file
+
+    make tests_unit_specific UNIT_TEST=tests_unit/dao/test_customer_dao.py
+
+Run a specific test function
+
+    make tests_unit_specific UNIT_TEST=tests_unit/dao/test_customer_dao.py::test_customers_insert
+
+### Run a specific integration test file / test function
+
+Run all tests in a directory or module
+
+    make tests_integration_specific INTEGRATION_TEST=tests_integration/routers
+
+Run all tests in a file
+
+    make tests_integration_specific INTEGRATION_TEST=tests_integration/routers/test_customer.py
+
+Run a specific test function
+
+    make tests_integration_specific INTEGRATION_TEST=tests_integration/routers/test_customer.py::test_customers_insert_read_delete
+
 ### Running with docker
 
 Create docker image

@@ -1,5 +1,7 @@
 .PHONY: tests_unit tests_integration
 .DEFAULT_GOAL := run_all
+UNIT_TEST ?= tests_unit/middleware/test_request_id.py::test_new_request_id_when_not_supplied_in_request
+INTEGRATION_TEST ?= tests_integration/test_main.py::test_root_get
 
 init:
 	uv sync --locked
@@ -21,13 +23,13 @@ tests_unit:
 	uv run pytest -vvvvv --html=tests_unit_report.html --self-contained-html tests_unit
 
 tests_unit_specific:
-	uv run pytest -vvvvv --setup-show --html=tests_unit_specific_report.html --self-contained-html tests_unit/middleware/test_request_id.py::test_new_request_id_when_not_supplied_in_request
+	uv run pytest -vvvvv --setup-show --html=tests_unit_specific_report.html --self-contained-html $(UNIT_TEST)
 
 tests_integration:
 	uv run pytest -vvvvv --html=tests_integration_report.html --self-contained-html tests_integration
 
 tests_integration_specific:
-	uv run pytest -vvvvv --setup-show --html=tests_integration_specific_report.html --self-contained-html tests_integration/test_main.py::test_root_get
+	uv run pytest -vvvvv --setup-show --html=tests_integration_specific_report.html --self-contained-html $(INTEGRATION_TEST)
 
 upgrade:
 	uv sync --upgrade
