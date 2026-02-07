@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 from pprint import pprint
-from typing import Generator, Any
+from typing import Generator, Any, MutableMapping
 
 import pytest
 from assertpy import assert_that
@@ -55,6 +55,7 @@ def test_sample_jsonb_orm_create_with_duplicate_json_id(
     delete_all_fixture: None,
     test_client: TestClient,
     expected_status: int,
+    captured_logs: list[MutableMapping[str, Any]],
 ):
     sample = create_random_sample(test_client)
 
@@ -85,6 +86,23 @@ def test_sample_jsonb_orm_create_with_duplicate_json_id(
         "detail": {"key": "$.json_id.id", "value": str(request_entity.json_data.id)}
     }
     assert_that(http_response_with_duplicate_id.json()).is_equal_to(expected_body)
+    assert_that(len(captured_logs)).is_greater_than(0)
+    assert_that(
+        list(
+            filter(
+                lambda entry: str(entry["event"]).startswith("IntegrityError!"),
+                captured_logs,
+            )
+        )
+    ).is_length(1)
+    assert_that(
+        list(
+            filter(
+                lambda entry: str(entry["event"]).startswith("An HTTP error!"),
+                captured_logs,
+            )
+        )
+    ).is_length(1)
 
 
 def test_sample_jsonb_orm_read_all(delete_all_fixture: None, test_client: TestClient):
