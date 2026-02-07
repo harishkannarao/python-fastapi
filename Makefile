@@ -18,10 +18,16 @@ fast_run:
 	uv run fastapi run app/main.py
 
 tests_unit:
-	uv run pytest tests_unit -vvvvv --html=tests_unit_report.html --self-contained-html
+	uv run pytest -vvvvv --html=tests_unit_report.html --self-contained-html tests_unit
+
+tests_unit_specific:
+	uv run pytest -vvvvv --setup-show --html=tests_unit_specific_report.html --self-contained-html tests_unit/middleware/test_request_id.py::test_new_request_id_when_not_supplied_in_request
 
 tests_integration:
-	uv run pytest tests_integration -vvvvv --html=tests_integration_report.html --self-contained-html
+	uv run pytest -vvvvv --html=tests_integration_report.html --self-contained-html tests_integration
+
+tests_integration_specific:
+	uv run pytest -vvvvv --setup-show --html=tests_integration_specific_report.html --self-contained-html tests_integration/test_main.py::test_root_get
 
 upgrade:
 	uv sync --upgrade

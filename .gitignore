@@ -1,4 +1,6 @@
 .idea
 .venv
 tests_integration_report.html
+tests_integration_specific_report.html
 tests_unit_report.html
+tests_unit_specific_report.html
