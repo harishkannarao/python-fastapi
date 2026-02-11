@@ -1,6 +1,7 @@
 from uuid import UUID
 
 import structlog
+from asyncpg.exceptions import UniqueViolationError, ForeignKeyViolationError
 from fastapi import APIRouter, Response, HTTPException
 from sqlalchemy.exc import IntegrityError
 
@@ -58,10 +59,22 @@ async def create_sample_document_handler(
     except IntegrityError as ie:
         logger = structlog.get_logger()
         logger.error(f"IntegrityError!: {repr(ie)}")
-        raise HTTPException(
-            status_code=409,
-            detail={"key": "$.json_id.id", "value": str(input_document.json_data.id)},
-        )
+        sqlstate: str = getattr(ie.orig, "sqlstate")
+        if sqlstate == UniqueViolationError.sqlstate:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "key": "$.json_id.id",
+                    "value": str(input_document.json_data.id),
+                },
+            )
+        elif sqlstate == ForeignKeyViolationError.sqlstate:
+            raise HTTPException(
+                status_code=422,
+                detail={"key": "$.sample_id", "value": str(input_document.sample_id)},
+            )
+        else:
+            raise ie
 
 
 @router.delete("", status_code=204)

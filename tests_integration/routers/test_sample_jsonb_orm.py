@@ -50,7 +50,7 @@ def test_sample_jsonb_orm_create(delete_all_fixture: None, test_client: TestClie
     [(False, 409)],
     indirect=["raise_server_exceptions"],
 )
-def test_sample_jsonb_orm_create_with_duplicate_json_id(
+def test_sample_jsonb_orm_create_with_duplicate_json_id_returns_409(
     raise_server_exceptions: bool,
     delete_all_fixture: None,
     test_client: TestClient,
@@ -86,6 +86,49 @@ def test_sample_jsonb_orm_create_with_duplicate_json_id(
         "detail": {"key": "$.json_id.id", "value": str(request_entity.json_data.id)}
     }
     assert_that(http_response_with_duplicate_id.json()).is_equal_to(expected_body)
+    assert_that(len(captured_logs)).is_greater_than(0)
+    assert_that(
+        list(
+            filter(
+                lambda entry: str(entry["event"]).startswith("IntegrityError!"),
+                captured_logs,
+            )
+        )
+    ).is_length(1)
+    assert_that(
+        list(
+            filter(
+                lambda entry: str(entry["event"]).startswith("An HTTP error!"),
+                captured_logs,
+            )
+        )
+    ).is_length(1)
+
+
+@pytest.mark.parametrize(
+    "raise_server_exceptions",
+    [False],
+    indirect=True,
+)
+def test_sample_jsonb_orm_create_with_non_existent_parent_sample_returns_422(
+    raise_server_exceptions: bool,
+    delete_all_fixture: None,
+    test_client: TestClient,
+    captured_logs: list[MutableMapping[str, Any]],
+):
+    request_entity: SampleDocumentCreate = SampleDocumentCreate(
+        sample_id=uuid.uuid4(),
+        json_data=DocumentMetadata(id=uuid.uuid4(), tags=tuple(["tag1", "tag2"])),
+        secondary_json_dict={"key": "value"},
+    )
+    http_response = test_client.put(
+        SAMPLE_JSONB_ORM_ENDPOINT, json=jsonable_encoder(request_entity)
+    )
+    assert_that(http_response.status_code).is_equal_to(422)
+    expected_body: dict[str, Any] = {
+        "detail": {"key": "$.sample_id", "value": str(request_entity.sample_id)}
+    }
+    assert_that(http_response.json()).is_equal_to(expected_body)
     assert_that(len(captured_logs)).is_greater_than(0)
     assert_that(
         list(
