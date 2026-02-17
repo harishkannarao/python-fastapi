@@ -4,7 +4,6 @@ from uuid import UUID
 
 from pydantic.dataclasses import dataclass
 
-from app.model.request.sample_document import SampleDocumentCreate
 from app.model.response.sample_document import DocumentMetadata
 
 
@@ -15,10 +14,12 @@ class SampleCreate:
     float_field: float | None
     decimal_field: Decimal | None
 
+
 @dataclass(frozen=True)
 class SampleDocumentInlineCreate:
     json_data: DocumentMetadata
     secondary_json_dict: Mapping[str, Any]
+
 
 @dataclass(frozen=True)
 class SampleCreateWithDocuments:

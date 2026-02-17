@@ -9,12 +9,15 @@ from app.model.response.sample import Sample
 
 router = APIRouter(prefix="/samples/orm/transaction", tags=["samples", "orm"])
 
+
 @router.put("/propagated")
 async def create_sample_with_documents_handler(
     session: AsyncSessionDep, sample_with_documents: SampleCreateWithDocuments
 ) -> Sample:
     result: Sample = await create_sample(session, sample_with_documents.sample)
     for document in sample_with_documents.documents:
-        input_document: SampleDocumentCreate = SampleDocumentCreate(sample_id=result.id, **vars(document))
+        input_document: SampleDocumentCreate = SampleDocumentCreate(
+            sample_id=result.id, **vars(document)
+        )
         await create_sample_document(session, input_document)
     return result
