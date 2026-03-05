@@ -13,11 +13,12 @@ from app.model.request.sample import (
     SampleDocumentInlineCreate,
 )
 from app.model.response.sample import Sample
-from app.model.response.sample_document import DocumentMetadata
+from app.model.response.sample_document import DocumentMetadata, SampleDocument
 
 SAMPLE_ORM_ENDPOINT = "/context/samples/orm"
 SAMPLE_JSONB_ORM_ENDPOINT = "/context/samples/jsonb/orm"
 SAMPLE_TRANSACTION_PROPAGATED_ENDPOINT = "/context/samples/orm/transaction/propagated"
+SAMPLE_TRANSACTION_ISOLATED_ENDPOINT = "/context/samples/orm/transaction/isolated"
 
 
 @pytest.fixture
@@ -29,8 +30,12 @@ def delete_all_fixture(test_client: TestClient) -> Generator[None, None, None]:
     delete_all_samples(test_client)
 
 
+@pytest.mark.parametrize(
+    "test_endpoint",
+    [SAMPLE_TRANSACTION_PROPAGATED_ENDPOINT, SAMPLE_TRANSACTION_ISOLATED_ENDPOINT],
+)
 def test_successful_creation_of_sample_with_documents(
-    delete_all_fixture: None, test_client: TestClient
+    test_endpoint: str, delete_all_fixture: None, test_client: TestClient
 ):
     document1 = SampleDocumentInlineCreate(
         json_data=DocumentMetadata(id=uuid.uuid4(), tags=tuple([])),
@@ -50,7 +55,7 @@ def test_successful_creation_of_sample_with_documents(
         documents=tuple([document1, document2]),
     )
     http_create_with_document_response = test_client.put(
-        SAMPLE_TRANSACTION_PROPAGATED_ENDPOINT, json=jsonable_encoder(request_entity)
+        test_endpoint, json=jsonable_encoder(request_entity)
     )
     assert_that(http_create_with_document_response.status_code).is_equal_to(200)
     created_sample: Sample = Sample(**http_create_with_document_response.json())
@@ -76,7 +81,7 @@ def test_successful_creation_of_sample_with_documents(
     [False],
     indirect=True,
 )
-def test_complete_rollback_of_create_sample_with_documents(
+def test_complete_rollback_of_create_sample_with_documents_with_propagation(
     raise_server_exceptions: bool, delete_all_fixture: None, test_client: TestClient
 ):
     json_id = uuid.uuid4()
@@ -109,6 +114,54 @@ def test_complete_rollback_of_create_sample_with_documents(
         f"{SAMPLE_JSONB_ORM_ENDPOINT}/json_id/{json_id}"
     )
     assert_that(http_document_response.status_code).is_equal_to(404)
+
+
+@pytest.mark.parametrize(
+    "raise_server_exceptions",
+    [False],
+    indirect=True,
+)
+def test_complete_no_rollback_of_create_sample_with_documents_with_isolation(
+    raise_server_exceptions: bool, delete_all_fixture: None, test_client: TestClient
+):
+    json_id = uuid.uuid4()
+    document1 = SampleDocumentInlineCreate(
+        json_data=DocumentMetadata(id=json_id, tags=tuple(["value1", "value2"])),
+        secondary_json_dict={"key": "value1"},
+    )
+    document2 = SampleDocumentInlineCreate(
+        json_data=DocumentMetadata(id=json_id, tags=tuple([])), secondary_json_dict={}
+    )
+    sample = SampleCreate(
+        username=f"user-{uuid.uuid4()}",
+        bool_field=None,
+        float_field=None,
+        decimal_field=None,
+    )
+    request_entity: SampleCreateWithDocuments = SampleCreateWithDocuments(
+        sample=sample,
+        documents=tuple([document1, document2]),
+    )
+    http_create_with_document_response = test_client.put(
+        SAMPLE_TRANSACTION_ISOLATED_ENDPOINT, json=jsonable_encoder(request_entity)
+    )
+    assert_that(http_create_with_document_response.status_code).is_equal_to(207)
+
+    http_read_all_response = test_client.get(SAMPLE_ORM_ENDPOINT)
+    assert_that(http_read_all_response.status_code).is_equal_to(200)
+    all_samples = [Sample(**item) for item in http_read_all_response.json()]
+    assert_that(all_samples).is_length(1)
+    assert_that(all_samples[0].username).is_equal_to(sample.username)
+
+    http_document_response = test_client.get(
+        f"{SAMPLE_JSONB_ORM_ENDPOINT}/json_id/{json_id}"
+    )
+    assert_that(http_document_response.status_code).is_equal_to(200)
+    saved_document = SampleDocument(**http_document_response.json())
+    assert_that(saved_document.json_data).is_equal_to(document1.json_data)
+    assert_that(saved_document.secondary_json_dict).is_equal_to(
+        document1.secondary_json_dict
+    )
 
 
 def delete_all(test_client: TestClient) -> None:
