@@ -23,3 +23,7 @@ services:
     volumes:
       - ./sample-openapi-spec.json:/tmp/sample-openapi-spec.json
     command: mock -h 0.0.0.0 /tmp/sample-openapi-spec.json
+    networks:
+      main:
+        aliases:
+          - prism-mock-open-api

@@ -1,6 +1,7 @@
 import structlog
 import uvicorn
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from contextlib import asynccontextmanager
 from fastapi.exception_handlers import (
@@ -36,6 +37,7 @@ context.include_router(sample_transaction_router)
 context.include_router(customer_router)
 context.include_router(dependency_router)
 context.include_router(external_faq_router)
+context.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 
 @asynccontextmanager

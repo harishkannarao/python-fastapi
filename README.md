@@ -94,6 +94,6 @@ Create docker image
 
 Run the created docker image
 
-    docker run -it --rm --network=python-fastapi-network -e 'APP_DB_HOST=python-fastapi-postgres' -e 'PORT=8000' -p 8000:8000 python-fastapi
+    docker run -it --rm --network=python-fastapi-network -e 'APP_DB_HOST=python-fastapi-postgres' -e 'APP_EXTERNAL_FAQ_API_BASE_URL=http://prism-mock-open-api:4010' -e 'PORT=8000' -p 8000:8000 python-fastapi
 
     http://localhost:8000
