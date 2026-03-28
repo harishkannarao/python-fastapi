@@ -12,6 +12,7 @@ dependencies = [
     "yoyo-migrations",
     "testcontainers[postgresql]",
     "databases[asyncpg]",
+    "aiofiles",
 ]
 
 [dependency-groups]
