@@ -25,6 +25,7 @@ from app.routers.sample_orm_transaction import router as sample_transaction_rout
 from app.routers.customer import router as customer_router
 from app.routers.dependency import router as dependency_router
 from app.routers.external_faq import router as external_faq_router
+from app.routers.sample_form import router as sample_form_router
 
 # Initialize logging at application startup
 setup_logging(json_logs=settings.app_json_logs)
@@ -37,6 +38,7 @@ context.include_router(sample_transaction_router)
 context.include_router(customer_router)
 context.include_router(dependency_router)
 context.include_router(external_faq_router)
+context.include_router(sample_form_router)
 context.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 
