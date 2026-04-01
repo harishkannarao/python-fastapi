@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-
+import tempfile
 
 class Settings(BaseSettings):
     app_context: str = "/context"
@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     app_db_log_sql: bool = False
     # db settings end
     app_external_faq_api_base_url: str = "http://localhost:4010"
-    app_file_upload_path: str = "/tmp"
+    app_file_upload_path: str = tempfile.gettempdir()
 
 
 settings = Settings()

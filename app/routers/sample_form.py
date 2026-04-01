@@ -41,7 +41,8 @@ async def handle_form(
 @router.get("/files/{name}")
 async def get_archive(name: str):
     file_path = os.path.join(settings.app_file_upload_path, name)
-
+    logger = structlog.get_logger()
+    logger.info(f"Resolved file_path: {file_path}")
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
 
