@@ -31,7 +31,7 @@ def postgres_docker_container() -> Generator[DockerContainer, None, None]:
         "POSTGRES_PASSWORD": "superpassword",
     }
     with DockerContainer(
-        image="public.ecr.aws/docker/library/postgres:18-alpine",
+        image="postgres:18-alpine",
         env=env_vars,
         ports=[5432],
     ) as container:
