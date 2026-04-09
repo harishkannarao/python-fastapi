@@ -34,8 +34,6 @@ async def test_sample_create_and_read():
     # assert_that(create_result.bool_field).is_equal_to(request.bool_field)
     # assert_that(create_result.float_field).is_equal_to(request.float_field)
     # assert_that(create_result.decimal_field).is_equal_to(request.decimal_field)
-    assert_that(create_result.created_datetime).is_greater_than_or_equal_to(start_time)
-    assert_that(create_result.created_datetime).is_less_than_or_equal_to(datetime.now(tz=timezone.utc) + timedelta(seconds=2))
-    assert_that(create_result.updated_datetime).is_greater_than_or_equal_to(start_time)
-    assert_that(create_result.updated_datetime).is_less_than_or_equal_to(datetime.now(tz=timezone.utc) + timedelta(seconds=2))
+    assert_that(create_result.created_datetime).is_between(start_time, datetime.now(tz=timezone.utc) + timedelta(seconds=2))
+    assert_that(create_result.updated_datetime).is_between(start_time, datetime.now(tz=timezone.utc) + timedelta(seconds=2))
 

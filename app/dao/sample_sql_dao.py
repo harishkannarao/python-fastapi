@@ -17,7 +17,7 @@ INSERT_SAMPLE = (
 )
 
 async def read_sample_by_id(sample_id: uuid.UUID) -> Sample | None:
-    row = await database.fetch_one(query=READ_SAMPLE_BY_ID, values={"sample_id": str(sample_id)})
+    row = await database.fetch_one(query=READ_SAMPLE_BY_ID, values={"sample_id": sample_id})
     if row:
         return Sample(**dict(row))
     else:
@@ -25,6 +25,6 @@ async def read_sample_by_id(sample_id: uuid.UUID) -> Sample | None:
 
 async def create_sample(sample: SampleCreate) -> Sample | None:
     sample_id: uuid.UUID = uuid.uuid4()
-    input_dict = {"sample_id": str(sample_id), "username": sample.username}
+    input_dict = {"sample_id": sample_id, "username": sample.username}
     await database.execute(query=INSERT_SAMPLE, values=input_dict)
     return await read_sample_by_id(sample_id)
