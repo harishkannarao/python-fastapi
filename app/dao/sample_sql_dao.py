@@ -11,9 +11,9 @@ READ_SAMPLE_BY_ID = (
 
 INSERT_SAMPLE = (
     """INSERT INTO 
-    sample_table(id, username, version, created_datetime, updated_datetime) 
+    sample_table(id, username, bool_field, float_field, decimal_field, version, created_datetime, updated_datetime) 
     VALUES 
-    (:sample_id, :username, 1, timezone('utc', now()), timezone('utc', now()))"""
+    (:sample_id, :username, :bool_field, :float_field, :decimal_field, 1, timezone('utc', now()), timezone('utc', now()))"""
 )
 
 async def read_sample_by_id(sample_id: uuid.UUID) -> Sample | None:
@@ -25,6 +25,6 @@ async def read_sample_by_id(sample_id: uuid.UUID) -> Sample | None:
 
 async def create_sample(sample: SampleCreate) -> Sample | None:
     sample_id: uuid.UUID = uuid.uuid4()
-    input_dict = {"sample_id": sample_id, "username": sample.username}
+    input_dict = {"sample_id": sample_id, "username": sample.username, "bool_field": sample.bool_field, "float_field": sample.float_field, "decimal_field": sample.decimal_field}
     await database.execute(query=INSERT_SAMPLE, values=input_dict)
     return await read_sample_by_id(sample_id)
