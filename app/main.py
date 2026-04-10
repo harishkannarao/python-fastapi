@@ -28,7 +28,7 @@ from app.routers.external_faq import router as external_faq_router
 from app.routers.sample_form import router as sample_form_router
 
 # Initialize logging at application startup
-setup_logging(json_logs=settings.app_json_logs)
+setup_logging(json_logs=settings.app_json_logs, db_logs=settings.app_db_log_sql)
 
 context = FastAPI(openapi_url=settings.app_open_api_url)
 

@@ -6,7 +6,7 @@ from structlog.contextvars import merge_contextvars
 from structlog.stdlib import LoggerFactory
 
 
-def setup_logging(json_logs: bool = False):
+def setup_logging(json_logs: bool = False, db_logs: bool = False):
     shared_processors = [
         structlog.processors.TimeStamper(fmt="iso", utc=True),
         structlog.processors.add_log_level,
@@ -27,6 +27,9 @@ def setup_logging(json_logs: bool = False):
         level=logging.INFO,
         handlers=[logging.StreamHandler(sys.stdout)],
     )
+
+    if db_logs:
+        logging.getLogger('databases').setLevel(logging.DEBUG)
 
     structlog.configure(
         processors=processors,
