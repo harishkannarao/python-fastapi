@@ -1,4 +1,5 @@
 import uuid
+from uuid import UUID
 
 from databases.backends.common.records import Record
 
@@ -13,9 +14,10 @@ INSERT_SAMPLE = """
     sample_table(
         id, username, bool_field, float_field, decimal_field, version, created_datetime, updated_datetime
     ) VALUES(
-        :id, :username, :bool_field, :float_field,
+        gen_random_uuid(), :username, :bool_field, :float_field,
         :decimal_field, 1, timezone('utc', now()), timezone('utc', now())
     )
+    RETURNING id
     """
 
 UPDATE_SAMPLE = """
@@ -43,15 +45,15 @@ async def read_sample_by_id(sample_id: uuid.UUID) -> Sample | None:
 
 
 async def create_sample(sample: SampleCreate) -> uuid.UUID:
-    sample_id: uuid.UUID = uuid.uuid4()
     input_dict = vars(sample)
-    input_dict["id"] = sample_id
-    await database.execute(query=INSERT_SAMPLE, values=input_dict)
-    return sample_id
+    inserted_row: Record = await database.fetch_one(
+        query=INSERT_SAMPLE, values=input_dict
+    )
+    return inserted_row["id"]
 
 
-async def update_sample(sample: SampleUpdate) -> int:
-    updated_ids: list[Record] = await database.fetch_all(
+async def update_sample(sample: SampleUpdate) -> list[UUID]:
+    updated_rows: list[Record] = await database.fetch_all(
         query=UPDATE_SAMPLE, values=vars(sample)
     )
-    return len(updated_ids)
+    return [row["id"] for row in updated_rows]

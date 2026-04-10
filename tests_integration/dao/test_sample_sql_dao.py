@@ -76,11 +76,12 @@ async def test_sample_update_and_read():
         new_version=created_sample.version + 1,
     )
 
-    update_count: int = await sample_sql_dao.update_sample(update_request)
+    update_ids: list[UUID] = await sample_sql_dao.update_sample(update_request)
 
     update_end_time: datetime = datetime.now(tz=timezone.utc) + timedelta(seconds=2)
 
-    assert_that(update_count).is_equal_to(1)
+    assert_that(update_ids).is_length(1)
+    assert_that(update_ids).contains_only(sample_id)
 
     updated_sample: Sample = await sample_sql_dao.read_sample_by_id(sample_id)
 
