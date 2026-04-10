@@ -1,11 +1,12 @@
-from datetime import datetime, timezone, timedelta
 import uuid
+from datetime import datetime, timezone, timedelta
 from decimal import Decimal
+from typing import AsyncGenerator
 from uuid import UUID
 
-from assertpy import assert_that
 import pytest
 import pytest_asyncio
+from assertpy import assert_that
 from databases import Database
 from pytest import MonkeyPatch
 
@@ -15,8 +16,90 @@ from app.model.response.sample import Sample
 
 
 @pytest_asyncio.fixture(autouse=True)
-def setup_dao_database(get_database: Database, monkeypatch: MonkeyPatch) -> None:
+async def setup_dao_database(
+    get_database: Database, monkeypatch: MonkeyPatch
+) -> AsyncGenerator[None, None]:
     monkeypatch.setattr("app.dao.sample_sql_dao.database", get_database)
+    await sample_sql_dao.delete_samples()
+
+    yield
+
+    await sample_sql_dao.delete_samples()
+
+
+@pytest.mark.asyncio
+async def test_sample_read_all_with_offset_and_limit():
+    create_request_1: SampleCreate = SampleCreate(
+        username=f"usr-{uuid.uuid4()}",
+        bool_field=True,
+        float_field=1,
+        decimal_field=Decimal(1),
+    )
+    sample_id_1: UUID = await sample_sql_dao.create_sample(create_request_1)
+
+    create_request_2: SampleCreate = SampleCreate(
+        username=f"usr-{uuid.uuid4()}",
+        bool_field=True,
+        float_field=2,
+        decimal_field=Decimal(2),
+    )
+    sample_id_2: UUID = await sample_sql_dao.create_sample(create_request_2)
+
+    create_request_3: SampleCreate = SampleCreate(
+        username=f"usr-{uuid.uuid4()}",
+        bool_field=True,
+        float_field=3,
+        decimal_field=Decimal(3),
+    )
+    sample_id_3: UUID = await sample_sql_dao.create_sample(create_request_3)
+
+    read_1: list[Sample] = await sample_sql_dao.read_samples(0, 2)
+    read_1_ids: list[UUID] = [sample.id for sample in read_1]
+    assert_that(read_1_ids).is_length(2)
+    assert_that(read_1_ids[0]).is_equal_to(sample_id_1)
+    assert_that(read_1_ids[1]).is_equal_to(sample_id_2)
+
+    read_2: list[Sample] = await sample_sql_dao.read_samples(1, 2)
+    read_2_ids: list[UUID] = [sample.id for sample in read_2]
+    assert_that(read_2_ids).is_length(2)
+    assert_that(read_2_ids[0]).is_equal_to(sample_id_2)
+    assert_that(read_2_ids[1]).is_equal_to(sample_id_3)
+
+
+@pytest.mark.asyncio
+async def test_sample_delete_all():
+    create_request_1: SampleCreate = SampleCreate(
+        username=f"usr-{uuid.uuid4()}",
+        bool_field=True,
+        float_field=1,
+        decimal_field=Decimal(1),
+    )
+    sample_id_1: UUID = await sample_sql_dao.create_sample(create_request_1)
+
+    create_request_2: SampleCreate = SampleCreate(
+        username=f"usr-{uuid.uuid4()}",
+        bool_field=True,
+        float_field=2,
+        decimal_field=Decimal(2),
+    )
+    sample_id_2: UUID = await sample_sql_dao.create_sample(create_request_2)
+
+    create_request_3: SampleCreate = SampleCreate(
+        username=f"usr-{uuid.uuid4()}",
+        bool_field=True,
+        float_field=3,
+        decimal_field=Decimal(3),
+    )
+    sample_id_3: UUID = await sample_sql_dao.create_sample(create_request_3)
+
+    await sample_sql_dao.delete_samples()
+
+    read_after_delete: list[Sample] = await sample_sql_dao.read_samples(0, 1)
+
+    assert_that(read_after_delete).is_empty()
+    assert_that(await sample_sql_dao.read_sample_by_id(sample_id_1)).is_none()
+    assert_that(await sample_sql_dao.read_sample_by_id(sample_id_2)).is_none()
+    assert_that(await sample_sql_dao.read_sample_by_id(sample_id_3)).is_none()
 
 
 @pytest.mark.asyncio
