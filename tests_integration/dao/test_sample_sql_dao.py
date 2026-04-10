@@ -1,6 +1,7 @@
 from datetime import datetime, timezone, timedelta
 import uuid
 from decimal import Decimal
+from uuid import UUID
 
 from assertpy import assert_that
 import pytest
@@ -20,23 +21,23 @@ def setup_dao_database(get_database: Database, monkeypatch: MonkeyPatch) -> None
 
 @pytest.mark.asyncio
 async def test_sample_create_and_read():
-    start_time: datetime = datetime.now(tz=timezone.utc)
+    start_time: datetime = datetime.now(tz=timezone.utc) - timedelta(seconds=2)
     request: SampleCreate = SampleCreate(
         username=f"usr-{uuid.uuid4()}",
         bool_field=True,
         float_field=2.1,
         decimal_field=Decimal(3.4),
     )
-    create_result: Sample = await sample_sql_dao.create_sample(request)
+    sample_id: UUID = await sample_sql_dao.create_sample(request)
 
-    assert_that(create_result.id).is_not_none()
-    assert_that(create_result.username).is_equal_to(request.username)
-    assert_that(create_result.bool_field).is_equal_to(request.bool_field)
-    assert_that(create_result.float_field).is_equal_to(request.float_field)
-    assert_that(create_result.decimal_field).is_equal_to(request.decimal_field)
-    assert_that(create_result.created_datetime).is_between(
-        start_time, datetime.now(tz=timezone.utc) + timedelta(seconds=2)
-    )
-    assert_that(create_result.updated_datetime).is_between(
-        start_time, datetime.now(tz=timezone.utc) + timedelta(seconds=2)
-    )
+    read_by_id: Sample = await sample_sql_dao.read_sample_by_id(sample_id)
+
+    end_time: datetime = datetime.now(tz=timezone.utc) + timedelta(seconds=2)
+
+    assert_that(read_by_id.id).is_not_none()
+    assert_that(read_by_id.username).is_equal_to(request.username)
+    assert_that(read_by_id.bool_field).is_equal_to(request.bool_field)
+    assert_that(read_by_id.float_field).is_equal_to(request.float_field)
+    assert_that(read_by_id.decimal_field).is_equal_to(request.decimal_field)
+    assert_that(read_by_id.created_datetime).is_between(start_time, end_time)
+    assert_that(read_by_id.updated_datetime).is_between(start_time, end_time)

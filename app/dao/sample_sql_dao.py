@@ -22,9 +22,9 @@ async def read_sample_by_id(sample_id: uuid.UUID) -> Sample | None:
         return None
 
 
-async def create_sample(sample: SampleCreate) -> Sample | None:
+async def create_sample(sample: SampleCreate) -> uuid.UUID:
     sample_id: uuid.UUID = uuid.uuid4()
     input_dict = vars(sample)
     input_dict["sample_id"] = sample_id
     await database.execute(query=INSERT_SAMPLE, values=input_dict)
-    return await read_sample_by_id(sample_id)
+    return sample_id
