@@ -44,6 +44,29 @@ async def test_sample_create_and_read():
 
 
 @pytest.mark.asyncio
+async def test_sample_delete():
+    create_request: SampleCreate = SampleCreate(
+        username=f"usr-{uuid.uuid4()}",
+        bool_field=True,
+        float_field=2.1,
+        decimal_field=Decimal(3.4),
+    )
+    sample_id: UUID = await sample_sql_dao.create_sample(create_request)
+
+    read_by_id: Sample = await sample_sql_dao.read_sample_by_id(sample_id)
+
+    assert_that(read_by_id.id).is_not_none()
+
+    deleted_id = await sample_sql_dao.delete_by_id(sample_id)
+
+    assert_that(deleted_id).is_equal_to(sample_id)
+
+    read_after_delete = await sample_sql_dao.read_sample_by_id(sample_id)
+
+    assert_that(read_after_delete).is_none()
+
+
+@pytest.mark.asyncio
 async def test_sample_update_and_read():
     start_time: datetime = datetime.now(tz=timezone.utc) - timedelta(seconds=2)
     create_request: SampleCreate = SampleCreate(

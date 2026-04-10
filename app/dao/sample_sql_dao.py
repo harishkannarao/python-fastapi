@@ -1,4 +1,3 @@
-import uuid
 from uuid import UUID
 
 from databases.backends.common.records import Record
@@ -7,7 +6,9 @@ from app.db.database_config import database
 from app.model.request.sample import SampleCreate, SampleUpdate
 from app.model.response.sample import Sample
 
-READ_SAMPLE_BY_ID = "select * from sample_table where id=:sample_id"
+READ_SAMPLE_BY_ID = "select * from sample_table where id=:id"
+
+DELETE_SAMPLE_BY_ID = "delete from sample_table where id=:id returning id"
 
 INSERT_SAMPLE = """
     INSERT INTO
@@ -34,17 +35,15 @@ UPDATE_SAMPLE = """
     """
 
 
-async def read_sample_by_id(sample_id: uuid.UUID) -> Sample | None:
-    row = await database.fetch_one(
-        query=READ_SAMPLE_BY_ID, values={"sample_id": sample_id}
-    )
+async def read_sample_by_id(sample_id: UUID) -> Sample | None:
+    row = await database.fetch_one(query=READ_SAMPLE_BY_ID, values={"id": sample_id})
     if row:
         return Sample(**dict(row))
     else:
         return None
 
 
-async def create_sample(sample: SampleCreate) -> uuid.UUID:
+async def create_sample(sample: SampleCreate) -> UUID:
     input_dict = vars(sample)
     inserted_row: Record = await database.fetch_one(
         query=INSERT_SAMPLE, values=input_dict
@@ -57,3 +56,10 @@ async def update_sample(sample: SampleUpdate) -> list[UUID]:
         query=UPDATE_SAMPLE, values=vars(sample)
     )
     return [row["id"] for row in updated_rows]
+
+
+async def delete_by_id(sample_id: UUID) -> UUID:
+    inserted_row: Record = await database.fetch_one(
+        query=DELETE_SAMPLE_BY_ID, values={"id": sample_id}
+    )
+    return inserted_row["id"]
