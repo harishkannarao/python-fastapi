@@ -36,6 +36,7 @@ async def test_sample_read_all_with_offset_and_limit():
         decimal_field=Decimal(1),
     )
     sample_id_1: UUID = await sample_sql_dao.create_sample(create_request_1)
+    sample_1 = await sample_sql_dao.read_sample_by_id(sample_id_1)
 
     create_request_2: SampleCreate = SampleCreate(
         username=f"usr-{uuid.uuid4()}",
@@ -44,6 +45,7 @@ async def test_sample_read_all_with_offset_and_limit():
         decimal_field=Decimal(2),
     )
     sample_id_2: UUID = await sample_sql_dao.create_sample(create_request_2)
+    sample_2 = await sample_sql_dao.read_sample_by_id(sample_id_2)
 
     create_request_3: SampleCreate = SampleCreate(
         username=f"usr-{uuid.uuid4()}",
@@ -52,18 +54,17 @@ async def test_sample_read_all_with_offset_and_limit():
         decimal_field=Decimal(3),
     )
     sample_id_3: UUID = await sample_sql_dao.create_sample(create_request_3)
+    sample_3 = await sample_sql_dao.read_sample_by_id(sample_id_3)
 
     read_1: list[Sample] = await sample_sql_dao.read_samples(0, 2)
-    read_1_ids: list[UUID] = [sample.id for sample in read_1]
-    assert_that(read_1_ids).is_length(2)
-    assert_that(read_1_ids[0]).is_equal_to(sample_id_1)
-    assert_that(read_1_ids[1]).is_equal_to(sample_id_2)
+    assert_that(read_1).is_length(2)
+    assert_that(read_1[0]).is_equal_to(sample_1)
+    assert_that(read_1[1]).is_equal_to(sample_2)
 
     read_2: list[Sample] = await sample_sql_dao.read_samples(1, 2)
-    read_2_ids: list[UUID] = [sample.id for sample in read_2]
-    assert_that(read_2_ids).is_length(2)
-    assert_that(read_2_ids[0]).is_equal_to(sample_id_2)
-    assert_that(read_2_ids[1]).is_equal_to(sample_id_3)
+    assert_that(read_2).is_length(2)
+    assert_that(read_2[0]).is_equal_to(sample_2)
+    assert_that(read_2[1]).is_equal_to(sample_3)
 
 
 @pytest.mark.asyncio
