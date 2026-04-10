@@ -1,4 +1,7 @@
 import uuid
+from typing import Any
+
+from databases.backends.common.records import Record
 
 from app.db.database_config import database
 from app.model.request.sample import SampleCreate, SampleUpdate
@@ -26,6 +29,7 @@ UPDATE_SAMPLE = """
     updated_datetime = timezone('utc', now())
     WHERE
     id = :id AND version = :old_version
+    RETURNING id
     """
 
 
@@ -47,5 +51,6 @@ async def create_sample(sample: SampleCreate) -> uuid.UUID:
     return sample_id
 
 
-async def update_sample(sample: SampleUpdate) -> None:
-    return None
+async def update_sample(sample: SampleUpdate) -> int:
+    updated_ids: list[Record] = await database.fetch_all(query=UPDATE_SAMPLE, values=vars(sample))
+    return len(updated_ids)

@@ -10,7 +10,7 @@ from databases import Database
 from pytest import MonkeyPatch
 
 from app.dao import sample_sql_dao
-from app.model.request.sample import SampleCreate
+from app.model.request.sample import SampleCreate, SampleUpdate
 from app.model.response.sample import Sample
 
 
@@ -65,3 +65,29 @@ async def test_sample_update_and_read():
     assert_that(created_sample.decimal_field).is_none()
     assert_that(created_sample.created_datetime).is_between(start_time, create_end_time)
     assert_that(created_sample.updated_datetime).is_between(start_time, create_end_time)
+
+    update_request: SampleUpdate = SampleUpdate(
+        id=created_sample.id,
+        username=f"usr-{uuid.uuid4()}",
+        bool_field=True,
+        float_field=3.1,
+        decimal_field=Decimal(2.5),
+        old_version=created_sample.version,
+        new_version=created_sample.version+1
+    )
+
+    update_count: int = await sample_sql_dao.update_sample(update_request)
+
+    update_end_time: datetime = datetime.now(tz=timezone.utc) + timedelta(seconds=2)
+
+    assert_that(update_count).is_equal_to(1)
+
+    updated_sample: Sample = await sample_sql_dao.read_sample_by_id(sample_id)
+
+    assert_that(updated_sample.id).is_equal_to(sample_id)
+    assert_that(updated_sample.username).is_equal_to(update_request.username)
+    assert_that(updated_sample.bool_field).is_equal_to(update_request.bool_field)
+    assert_that(updated_sample.float_field).is_equal_to(update_request.float_field)
+    assert_that(updated_sample.decimal_field).is_equal_to(update_request.decimal_field)
+    assert_that(updated_sample.created_datetime).is_equal_to(created_sample.created_datetime)
+    assert_that(updated_sample.updated_datetime).is_between(start_time, update_end_time)
