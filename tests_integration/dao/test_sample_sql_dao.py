@@ -73,7 +73,7 @@ async def test_sample_update_and_read():
         float_field=3.1,
         decimal_field=Decimal(2.5),
         old_version=created_sample.version,
-        new_version=created_sample.version+1
+        new_version=created_sample.version + 1,
     )
 
     update_count: int = await sample_sql_dao.update_sample(update_request)
@@ -89,5 +89,7 @@ async def test_sample_update_and_read():
     assert_that(updated_sample.bool_field).is_equal_to(update_request.bool_field)
     assert_that(updated_sample.float_field).is_equal_to(update_request.float_field)
     assert_that(updated_sample.decimal_field).is_equal_to(update_request.decimal_field)
-    assert_that(updated_sample.created_datetime).is_equal_to(created_sample.created_datetime)
+    assert_that(updated_sample.created_datetime).is_equal_to(
+        created_sample.created_datetime
+    )
     assert_that(updated_sample.updated_datetime).is_between(start_time, update_end_time)

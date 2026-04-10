@@ -1,5 +1,4 @@
 import uuid
-from typing import Any
 
 from databases.backends.common.records import Record
 
@@ -52,5 +51,7 @@ async def create_sample(sample: SampleCreate) -> uuid.UUID:
 
 
 async def update_sample(sample: SampleUpdate) -> int:
-    updated_ids: list[Record] = await database.fetch_all(query=UPDATE_SAMPLE, values=vars(sample))
+    updated_ids: list[Record] = await database.fetch_all(
+        query=UPDATE_SAMPLE, values=vars(sample)
+    )
     return len(updated_ids)
