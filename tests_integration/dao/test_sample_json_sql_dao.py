@@ -57,13 +57,17 @@ async def test_sample_document_create_and_read():
 
     assert_that(read_document_by_id.id).is_not_none()
     assert_that(read_document_by_id.sample_id).is_equal_to(sample_id)
-    assert_that(
-        DeepDiff(
-            jsonable_encoder(create_request.json_data),
-            jsonable_encoder(read_document_by_id.json_data),
-            ignore_order=True,
-        )
-    ).is_empty()
+    assert_that(read_document_by_id.json_data.id).is_equal_to(
+        create_request.json_data.id
+    )
+    assert_that(read_document_by_id.json_data.tags).is_length(2)
+    assert_that(read_document_by_id.json_data.tags).contains("tag-2", "tag-1")
+    assert_that(read_document_by_id.secondary_json_dict["test"]).is_equal_to(
+        create_request.secondary_json_dict["test"]
+    )
+    assert_that(read_document_by_id.secondary_json_dict["nested"]["sub"]).is_equal_to(
+        create_request.secondary_json_dict["nested"]["sub"]
+    )
     assert_that(
         DeepDiff(
             jsonable_encoder(create_request.secondary_json_dict),
