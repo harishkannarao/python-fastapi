@@ -29,7 +29,7 @@ def setup_logging(json_logs: bool = False, db_logs: bool = False):
     )
 
     if db_logs:
-        logging.getLogger('databases').setLevel(logging.DEBUG)
+        logging.getLogger("databases").setLevel(logging.DEBUG)
 
     structlog.configure(
         processors=processors,
