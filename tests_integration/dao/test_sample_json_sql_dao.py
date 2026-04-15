@@ -78,6 +78,34 @@ async def test_sample_document_create_and_read():
     assert_that(read_document_by_id.created_datetime).is_between(start_time, end_time)
 
 
+@pytest.mark.asyncio
+async def test_sample_document_read_by_json_id():
+    sample_id: UUID = await create_random_sample()
+
+    create_request: SampleDocumentCreate = SampleDocumentCreate(
+        sample_id=sample_id,
+        json_data=DocumentMetadata(id=uuid.uuid4(), tags=("tag-1", "tag-2")),
+        secondary_json_dict={
+            "test": "value",
+            "nested": {"sub": "value"},
+            "array": [{"key": "test-value"}],
+        },
+    )
+
+    sample_document_id: UUID = await sample_jsonb_sql_dao.create_sample_document(
+        create_request
+    )
+    read_document_by_id: SampleDocument = (
+        await sample_jsonb_sql_dao.read_sample_document_by_id(sample_document_id)
+    )
+    read_document_by_json_id: SampleDocument = (
+        await sample_jsonb_sql_dao.read_sample_document_by_json_id(
+            create_request.json_data.id
+        )
+    )
+    assert_that(read_document_by_json_id).is_equal_to(read_document_by_id)
+
+
 async def create_random_sample() -> UUID:
     create_sample_request: SampleCreate = SampleCreate(
         username=f"usr-{uuid.uuid4()}",

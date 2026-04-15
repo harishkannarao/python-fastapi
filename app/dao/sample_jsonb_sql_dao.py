@@ -11,6 +11,12 @@ from app.model.response.sample_document import SampleDocument, DocumentMetadata
 
 READ_SAMPLE_DOCUMENT_BY_ID = "select * from sample_documents where id=:id"
 
+READ_SAMPLE_DOCUMENT_BY_JSON_ID = """
+    SELECT *
+    FROM sample_documents
+    WHERE (cast(json_data->>'id' as text)) = :json_id
+    """
+
 INSERT_SAMPLE_DOCUMENT = """
     INSERT INTO
     sample_documents(
@@ -25,6 +31,16 @@ INSERT_SAMPLE_DOCUMENT = """
 async def read_sample_document_by_id(sample_document_id: UUID) -> SampleDocument | None:
     row: Record = await database.fetch_one(
         query=READ_SAMPLE_DOCUMENT_BY_ID, values={"id": sample_document_id}
+    )
+    if row:
+        return map_from_db_row(row)
+    else:
+        return None
+
+
+async def read_sample_document_by_json_id(json_id: UUID) -> SampleDocument | None:
+    row: Record = await database.fetch_one(
+        query=READ_SAMPLE_DOCUMENT_BY_JSON_ID, values={"json_id": str(json_id)}
     )
     if row:
         return map_from_db_row(row)
