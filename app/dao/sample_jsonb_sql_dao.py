@@ -9,6 +9,12 @@ from app.db.database_config import database
 from app.model.request.sample_document import SampleDocumentCreate
 from app.model.response.sample_document import SampleDocument, DocumentMetadata
 
+READ_SAMPLES_DOCUMENTS = """
+    SELECT *
+    FROM sample_documents
+    ORDER BY created_datetime
+    """
+
 READ_SAMPLE_DOCUMENT_BY_ID = "select * from sample_documents where id=:id"
 
 READ_SAMPLE_DOCUMENT_BY_JSON_ID = """
@@ -26,6 +32,13 @@ INSERT_SAMPLE_DOCUMENT = """
     )
     RETURNING id
     """
+
+DELETE_SAMPLES_DOCUMENTS = "TRUNCATE TABLE sample_documents"
+
+
+async def read_sample_documents() -> list[SampleDocument]:
+    rows: list[Record] = await database.fetch_all(query=READ_SAMPLES_DOCUMENTS)
+    return [map_from_db_row(row) for row in rows]
 
 
 async def read_sample_document_by_id(sample_document_id: UUID) -> SampleDocument | None:
@@ -67,3 +80,7 @@ def map_to_db_row(input_document: SampleDocumentCreate) -> dict[str, Any]:
     input_dict["json_data"] = json.dumps(input_dict["json_data"])
     input_dict["secondary_json_dict"] = json.dumps(input_dict["secondary_json_dict"])
     return input_dict
+
+
+async def delete_sample_documents() -> None:
+    await database.execute(query=DELETE_SAMPLES_DOCUMENTS)
