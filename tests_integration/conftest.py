@@ -18,10 +18,17 @@ from pytest_httpserver.httpserver import HTTPServer
 
 import app.config as config
 import app.dao.customer_dao as customer_dao
+import app.dao.sample_sql_dao as sample_sql_dao
+import app.dao.sample_jsonb_sql_dao as sample_jsonb_sql_dao
 import app.db.database_config as database_config
 import app.main as main
 
-DB_MODULES_TO_RELOAD = [database_config, customer_dao]
+DB_MODULES_TO_RELOAD = [
+    database_config,
+    customer_dao,
+    sample_sql_dao,
+    sample_jsonb_sql_dao,
+]
 
 
 @pytest.fixture(scope="session")

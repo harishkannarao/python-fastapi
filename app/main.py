@@ -21,7 +21,8 @@ from app.middleware.process_time import ProcessTimeMiddleware
 from app.middleware.request_id import RequestIdMiddleware, create_request_context
 from app.routers.sample_orm import router as sample_router
 from app.routers.sample_jsonb_orm import router as sample_document_router
-from app.routers.sample_orm_transaction import router as sample_transaction_router
+from app.routers.sample_orm_transaction import router as sample_orm_transaction_router
+from app.routers.sample_sql_transaction import router as sample_sql_transaction_router
 from app.routers.customer import router as customer_router
 from app.routers.dependency import router as dependency_router
 from app.routers.external_faq import router as external_faq_router
@@ -34,7 +35,8 @@ context = FastAPI(openapi_url=settings.app_open_api_url)
 
 context.include_router(sample_router)
 context.include_router(sample_document_router)
-context.include_router(sample_transaction_router)
+context.include_router(sample_orm_transaction_router)
+context.include_router(sample_sql_transaction_router)
 context.include_router(customer_router)
 context.include_router(dependency_router)
 context.include_router(external_faq_router)
