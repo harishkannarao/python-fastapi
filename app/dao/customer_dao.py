@@ -1,6 +1,7 @@
 from typing import Any
 
-from app.db.database_config import database
+from databases import Database
+
 from app.model.customer import Customer
 
 SELECT_ALL_CUSTOMERS = "SELECT * FROM CUSTOMERS"
@@ -10,18 +11,18 @@ INSERT_CUSTOMER = (
 DELETE_ALL_CUSTOMERS = "TRUNCATE TABLE CUSTOMERS"
 
 
-async def read_customers() -> list[Customer]:
+async def read_customers(database: Database) -> list[Customer]:
     rows = await database.fetch_all(query=SELECT_ALL_CUSTOMERS)
     customers: list[Customer] = list(map(lambda row: Customer(**dict(row)), rows))
     return customers
 
 
-async def insert_customers(customers: list[Customer]) -> None:
+async def insert_customers(database: Database, customers: list[Customer]) -> None:
     rows: list[dict[str, Any]] = list(map(lambda customer: vars(customer), customers))
     await database.execute_many(query=INSERT_CUSTOMER, values=rows)
     return None
 
 
-async def delete_all_customers() -> None:
+async def delete_all_customers(database: Database) -> None:
     await database.execute(query=DELETE_ALL_CUSTOMERS)
     return None

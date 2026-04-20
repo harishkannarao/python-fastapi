@@ -1,5 +1,5 @@
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from assertpy import assert_that
@@ -32,6 +32,7 @@ def mock_delete_all_customers(mocker: MockerFixture) -> AsyncMock:
 
 
 def test_customers_delete(
+    mock_get_database: MagicMock,
     mock_delete_all_customers: AsyncMock,
     test_client: TestClient,
 ):
@@ -41,10 +42,11 @@ def test_customers_delete(
     assert_that(response.status_code).is_equal_to(204)
 
     assert len(mock_delete_all_customers.call_args_list) == 1
-    assert mock_delete_all_customers.call_args == ()
+    assert next(mock_delete_all_customers.call_args.args[0]) == mock_get_database
 
 
 def test_customers_insert(
+    mock_get_database: MagicMock,
     mock_insert_customers: AsyncMock,
     test_client: TestClient,
 ):
@@ -58,15 +60,17 @@ def test_customers_insert(
     assert_that(response.status_code).is_equal_to(204)
 
     assert len(mock_insert_customers.call_args_list) == 1
-    assert len(mock_insert_customers.call_args.args) == 1
+    assert len(mock_insert_customers.call_args.args) == 2
+    assert next(mock_insert_customers.call_args.args[0]) == mock_get_database
 
-    inserted_rows: list[Customer] = mock_insert_customers.call_args.args[0]
+    inserted_rows: list[Customer] = mock_insert_customers.call_args.args[1]
     assert_that(inserted_rows).is_length(2)
     assert_that(inserted_rows).contains(customer1)
     assert_that(inserted_rows).contains(customer2)
 
 
 def test_customers_read(
+    mock_get_database: MagicMock,
     mock_read_customers: AsyncMock,
     test_client: TestClient,
 ):
@@ -85,4 +89,4 @@ def test_customers_read(
     assert_that(response_json).contains(jsonable_encoder(customer2))
 
     assert len(mock_read_customers.call_args_list) == 1
-    assert mock_read_customers.call_args.args == ()
+    assert next(mock_read_customers.call_args.args[0]) == mock_get_database
