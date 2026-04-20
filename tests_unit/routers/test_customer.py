@@ -32,7 +32,6 @@ def mock_delete_all_customers(mocker: MockerFixture) -> AsyncMock:
 
 
 def test_customers_delete(
-    mock_create_transaction: AsyncMock,
     mock_delete_all_customers: AsyncMock,
     test_client: TestClient,
 ):
@@ -46,7 +45,6 @@ def test_customers_delete(
 
 
 def test_customers_insert(
-    mock_create_transaction: AsyncMock,
     mock_insert_customers: AsyncMock,
     test_client: TestClient,
 ):
@@ -69,7 +67,6 @@ def test_customers_insert(
 
 
 def test_customers_read(
-    mock_create_transaction: AsyncMock,
     mock_read_customers: AsyncMock,
     test_client: TestClient,
 ):

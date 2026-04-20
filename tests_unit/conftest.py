@@ -3,13 +3,12 @@ from importlib import reload
 from typing import Generator, MutableMapping, Any
 from unittest.mock import AsyncMock, MagicMock
 
-from databases.core import Transaction
+from databases import Database
 from pytest_mock import MockerFixture
 from pytest import MonkeyPatch
 from sqlmodel import Session
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.db.database_config import create_transaction
 
 import pytest
 import structlog
@@ -25,27 +24,26 @@ def test_client(
     monkeypatch: MonkeyPatch,
     disable_db_migrations: config.Settings,
     disable_db_connection: config.Settings,
-    mock_create_transaction: MagicMock,
+    mock_get_database: MagicMock,
     mock_session: MagicMock,
     mock_async_session: MagicMock,
 ) -> Generator[TestClient, None, None]:
     monkeypatch.setattr("app.db.database_config.engine", None)
     monkeypatch.setattr("app.db.database_config.async_engine", None)
     app = reload(main).app
-    app.dependency_overrides[create_transaction] = mock_create_transaction
     with TestClient(app) as client:
         yield client
     reload(main)
 
 
 @pytest.fixture
-def mock_create_transaction(mocker: MockerFixture) -> AsyncMock:
-    mock_produce_transaction: AsyncMock = mocker.patch(
-        "app.db.database_dependencies.create_transaction"
+def mock_get_database(mocker: MockerFixture) -> MagicMock:
+    mock_get_database: MagicMock = mocker.patch(
+        "app.db.database_dependencies.get_database"
     )
-    mock_transaction = AsyncMock(spec=Transaction)
-    mock_produce_transaction.return_value = async_gen_helper([mock_transaction])
-    return mock_transaction
+    mock_database = MagicMock(spec=Database)
+    mock_get_database.return_value = gen_helper([mock_database])
+    return mock_database
 
 
 @pytest.fixture

@@ -1,23 +1,22 @@
 from typing import Annotated, Generator, Any, AsyncGenerator
 
-from databases.core import Transaction
+from databases import Database
 from fastapi import Depends
 from sqlmodel import Session
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.db.database_config import (
-    create_transaction,
+    get_database,
     create_session,
     create_async_session,
 )
 
 
-async def create_transaction_dep():
-    async for transaction in create_transaction():
-        yield transaction
+def get_database_dep() -> Database:
+    return get_database()
 
 
-TransactionDep = Annotated[Transaction, Depends(create_transaction_dep)]
+DatabaseDep = Annotated[Database, Depends(get_database_dep)]
 
 
 def create_session_dep() -> Generator[Session, Any, None]:

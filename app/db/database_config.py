@@ -23,9 +23,8 @@ database = Database(
 )
 
 
-async def create_transaction():
-    async with database.transaction() as transaction:
-        yield transaction
+def get_database() -> Database:
+    return database
 
 
 engine = create_engine(
