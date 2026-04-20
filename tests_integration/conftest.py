@@ -5,27 +5,25 @@ from typing import Generator, Any, MutableMapping, AsyncGenerator
 
 import pytest
 import pytest_asyncio
-from databases import Database
-from pytest import MonkeyPatch
 import structlog
 from assertpy import assert_that
+from databases import Database
 from fastapi.testclient import TestClient
+from pytest import MonkeyPatch
+from pytest_httpserver.httpserver import HTTPServer
 from sqlmodel import Session
 from sqlmodel.ext.asyncio.session import AsyncSession
 from tenacity import Retrying, stop_after_delay, wait_fixed
 from testcontainers.core.container import DockerContainer
-from pytest_httpserver.httpserver import HTTPServer
 
 import app.config as config
-import app.dao.customer_dao as customer_dao
-import app.dao.sample_sql_dao as sample_sql_dao
 import app.dao.sample_jsonb_sql_dao as sample_jsonb_sql_dao
+import app.dao.sample_sql_dao as sample_sql_dao
 import app.db.database_config as database_config
 import app.main as main
 
 DB_MODULES_TO_RELOAD = [
     database_config,
-    customer_dao,
     sample_sql_dao,
     sample_jsonb_sql_dao,
 ]
