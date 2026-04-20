@@ -9,14 +9,17 @@ router = APIRouter(prefix="/customers", tags=["users"])
 
 @router.get("")
 async def read_customers(database: DatabaseDep) -> list[Customer]:
-    return await customer_dao.read_customers(database)
+    async with database.transaction():
+        return await customer_dao.read_customers(database)
 
 
 @router.put("", status_code=status.HTTP_204_NO_CONTENT, tags=["users"])
 async def insert_customers(database: DatabaseDep, customers: list[Customer]) -> None:
-    return await customer_dao.insert_customers(database, customers)
+    async with database.transaction():
+        return await customer_dao.insert_customers(database, customers)
 
 
 @router.delete("", status_code=status.HTTP_204_NO_CONTENT, tags=["users"])
 async def delete_all_customers(database: DatabaseDep) -> None:
-    return await customer_dao.delete_all_customers(database)
+    async with database.transaction():
+        return await customer_dao.delete_all_customers(database)

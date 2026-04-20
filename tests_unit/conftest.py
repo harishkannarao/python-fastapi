@@ -42,7 +42,7 @@ def mock_get_database(mocker: MockerFixture) -> MagicMock:
         "app.db.database_dependencies.get_database"
     )
     mock_database = MagicMock(spec=Database)
-    mock_get_database.return_value = gen_helper([mock_database])
+    mock_get_database.return_value = mock_database
     return mock_database
 
 

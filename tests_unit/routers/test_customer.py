@@ -42,7 +42,7 @@ def test_customers_delete(
     assert_that(response.status_code).is_equal_to(204)
 
     assert len(mock_delete_all_customers.call_args_list) == 1
-    assert next(mock_delete_all_customers.call_args.args[0]) == mock_get_database
+    assert mock_delete_all_customers.call_args.args == (mock_get_database,)
 
 
 def test_customers_insert(
@@ -61,7 +61,7 @@ def test_customers_insert(
 
     assert len(mock_insert_customers.call_args_list) == 1
     assert len(mock_insert_customers.call_args.args) == 2
-    assert next(mock_insert_customers.call_args.args[0]) == mock_get_database
+    assert mock_insert_customers.call_args.args[0] == mock_get_database
 
     inserted_rows: list[Customer] = mock_insert_customers.call_args.args[1]
     assert_that(inserted_rows).is_length(2)
@@ -89,4 +89,4 @@ def test_customers_read(
     assert_that(response_json).contains(jsonable_encoder(customer2))
 
     assert len(mock_read_customers.call_args_list) == 1
-    assert next(mock_read_customers.call_args.args[0]) == mock_get_database
+    assert mock_read_customers.call_args.args == (mock_get_database,)
