@@ -76,44 +76,44 @@ def test_successful_creation_of_sample_with_documents(
     assert_that(http_document_2_response.status_code).is_equal_to(200)
 
 
-# @pytest.mark.parametrize(
-#     "raise_server_exceptions",
-#     [False],
-#     indirect=True,
-# )
-# def test_complete_rollback_of_create_sample_with_documents_with_propagation(
-#     raise_server_exceptions: bool, delete_all_fixture: None, test_client: TestClient
-# ):
-#     json_id = uuid.uuid4()
-#     document1 = SampleDocumentInlineCreate(
-#         json_data=DocumentMetadata(id=json_id, tags=tuple([])), secondary_json_dict={}
-#     )
-#     document2 = SampleDocumentInlineCreate(
-#         json_data=DocumentMetadata(id=json_id, tags=tuple([])), secondary_json_dict={}
-#     )
-#     request_entity: SampleCreateWithDocuments = SampleCreateWithDocuments(
-#         sample=SampleCreate(
-#             username=f"user-{uuid.uuid4()}",
-#             bool_field=None,
-#             float_field=None,
-#             decimal_field=None,
-#         ),
-#         documents=tuple([document1, document2]),
-#     )
-#     http_create_with_document_response = test_client.put(
-#         SAMPLE_TRANSACTION_PROPAGATED_ENDPOINT, json=jsonable_encoder(request_entity)
-#     )
-#     assert_that(http_create_with_document_response.status_code).is_equal_to(500)
-#
-#     http_read_all_response = test_client.get(SAMPLE_ORM_ENDPOINT)
-#     assert_that(http_read_all_response.status_code).is_equal_to(200)
-#     all_samples = [Sample(**item) for item in http_read_all_response.json()]
-#     assert_that(all_samples).is_empty()
-#
-#     http_document_response = test_client.get(
-#         f"{SAMPLE_JSONB_ORM_ENDPOINT}/json_id/{json_id}"
-#     )
-#     assert_that(http_document_response.status_code).is_equal_to(404)
+@pytest.mark.parametrize(
+    "raise_server_exceptions",
+    [False],
+    indirect=True,
+)
+def test_complete_rollback_of_create_sample_with_documents_with_propagation(
+    raise_server_exceptions: bool, delete_all_fixture: None, test_client: TestClient
+):
+    json_id = uuid.uuid4()
+    document1 = SampleDocumentInlineCreate(
+        json_data=DocumentMetadata(id=json_id, tags=tuple([])), secondary_json_dict={}
+    )
+    document2 = SampleDocumentInlineCreate(
+        json_data=DocumentMetadata(id=json_id, tags=tuple([])), secondary_json_dict={}
+    )
+    request_entity: SampleCreateWithDocuments = SampleCreateWithDocuments(
+        sample=SampleCreate(
+            username=f"user-{uuid.uuid4()}",
+            bool_field=None,
+            float_field=None,
+            decimal_field=None,
+        ),
+        documents=tuple([document1, document2]),
+    )
+    http_create_with_document_response = test_client.put(
+        SAMPLE_TRANSACTION_PROPAGATED_ENDPOINT, json=jsonable_encoder(request_entity)
+    )
+    assert_that(http_create_with_document_response.status_code).is_equal_to(500)
+
+    http_read_all_response = test_client.get(SAMPLE_ORM_ENDPOINT)
+    assert_that(http_read_all_response.status_code).is_equal_to(200)
+    all_samples = [Sample(**item) for item in http_read_all_response.json()]
+    assert_that(all_samples).is_empty()
+
+    http_document_response = test_client.get(
+        f"{SAMPLE_JSONB_ORM_ENDPOINT}/json_id/{json_id}"
+    )
+    assert_that(http_document_response.status_code).is_equal_to(404)
 
 
 @pytest.mark.parametrize(

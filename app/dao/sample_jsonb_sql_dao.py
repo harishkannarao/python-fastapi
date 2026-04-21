@@ -2,10 +2,10 @@ import json
 from typing import Any
 from uuid import UUID
 
+from databases import Database
 from databases.backends.common.records import Record
 from fastapi.encoders import jsonable_encoder
 
-from app.db.database_config import database
 from app.model.request.sample_document import SampleDocumentCreate
 from app.model.response.sample_document import SampleDocument, DocumentMetadata
 
@@ -36,12 +36,14 @@ INSERT_SAMPLE_DOCUMENT = """
 DELETE_SAMPLES_DOCUMENTS = "TRUNCATE TABLE sample_documents"
 
 
-async def read_sample_documents() -> list[SampleDocument]:
+async def read_sample_documents(database: Database) -> list[SampleDocument]:
     rows: list[Record] = await database.fetch_all(query=READ_SAMPLES_DOCUMENTS)
     return [map_from_db_row(row) for row in rows]
 
 
-async def read_sample_document_by_id(sample_document_id: UUID) -> SampleDocument | None:
+async def read_sample_document_by_id(
+    database: Database, sample_document_id: UUID
+) -> SampleDocument | None:
     row: Record = await database.fetch_one(
         query=READ_SAMPLE_DOCUMENT_BY_ID, values={"id": sample_document_id}
     )
@@ -51,7 +53,9 @@ async def read_sample_document_by_id(sample_document_id: UUID) -> SampleDocument
         return None
 
 
-async def read_sample_document_by_json_id(json_id: UUID) -> SampleDocument | None:
+async def read_sample_document_by_json_id(
+    database: Database, json_id: UUID
+) -> SampleDocument | None:
     row: Record = await database.fetch_one(
         query=READ_SAMPLE_DOCUMENT_BY_JSON_ID, values={"json_id": str(json_id)}
     )
@@ -61,7 +65,9 @@ async def read_sample_document_by_json_id(json_id: UUID) -> SampleDocument | Non
         return None
 
 
-async def create_sample_document(input_document: SampleDocumentCreate) -> UUID:
+async def create_sample_document(
+    database: Database, input_document: SampleDocumentCreate
+) -> UUID:
     inserted_row: Record = await database.fetch_one(
         query=INSERT_SAMPLE_DOCUMENT, values=map_to_db_row(input_document)
     )
@@ -82,5 +88,5 @@ def map_to_db_row(input_document: SampleDocumentCreate) -> dict[str, Any]:
     return input_dict
 
 
-async def delete_sample_documents() -> None:
+async def delete_sample_documents(database: Database) -> None:
     await database.execute(query=DELETE_SAMPLES_DOCUMENTS)

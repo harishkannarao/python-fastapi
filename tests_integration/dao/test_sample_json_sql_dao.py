@@ -10,7 +10,6 @@ from assertpy import assert_that
 from databases import Database
 from deepdiff import DeepDiff
 from fastapi.encoders import jsonable_encoder
-from pytest import MonkeyPatch
 
 from app.dao import sample_sql_dao, sample_jsonb_sql_dao
 from app.model.request.sample import SampleCreate
@@ -19,24 +18,20 @@ from app.model.response.sample_document import DocumentMetadata, SampleDocument
 
 
 @pytest_asyncio.fixture(autouse=True)
-async def setup_dao_database(
-    get_database: Database, monkeypatch: MonkeyPatch
-) -> AsyncGenerator[None, None]:
-    monkeypatch.setattr("app.dao.sample_jsonb_sql_dao.database", get_database)
-    monkeypatch.setattr("app.dao.sample_sql_dao.database", get_database)
-    await sample_jsonb_sql_dao.delete_sample_documents()
-    await sample_sql_dao.delete_samples()
+async def setup_teardown(get_database: Database) -> AsyncGenerator[None, None]:
+    await sample_jsonb_sql_dao.delete_sample_documents(get_database)
+    await sample_sql_dao.delete_samples(get_database)
 
     yield
 
-    await sample_jsonb_sql_dao.delete_sample_documents()
-    await sample_sql_dao.delete_samples()
+    await sample_jsonb_sql_dao.delete_sample_documents(get_database)
+    await sample_sql_dao.delete_samples(get_database)
 
 
 @pytest.mark.asyncio
-async def test_sample_document_create_and_read():
+async def test_sample_document_create_and_read(get_database: Database):
     start_time: datetime = datetime.now(tz=timezone.utc) - timedelta(seconds=2)
-    sample_id: UUID = await create_random_sample()
+    sample_id: UUID = await create_random_sample(get_database)
 
     create_request: SampleDocumentCreate = SampleDocumentCreate(
         sample_id=sample_id,
@@ -49,10 +44,12 @@ async def test_sample_document_create_and_read():
     )
 
     sample_document_id: UUID = await sample_jsonb_sql_dao.create_sample_document(
-        create_request
+        get_database, create_request
     )
     read_document_by_id: SampleDocument = (
-        await sample_jsonb_sql_dao.read_sample_document_by_id(sample_document_id)
+        await sample_jsonb_sql_dao.read_sample_document_by_id(
+            get_database, sample_document_id
+        )
     )
 
     end_time: datetime = datetime.now(tz=timezone.utc) + timedelta(seconds=2)
@@ -81,8 +78,8 @@ async def test_sample_document_create_and_read():
 
 
 @pytest.mark.asyncio
-async def test_sample_document_read_by_json_id():
-    sample_id: UUID = await create_random_sample()
+async def test_sample_document_read_by_json_id(get_database: Database):
+    sample_id: UUID = await create_random_sample(get_database)
 
     create_request: SampleDocumentCreate = SampleDocumentCreate(
         sample_id=sample_id,
@@ -95,22 +92,24 @@ async def test_sample_document_read_by_json_id():
     )
 
     sample_document_id: UUID = await sample_jsonb_sql_dao.create_sample_document(
-        create_request
+        get_database, create_request
     )
     read_document_by_id: SampleDocument = (
-        await sample_jsonb_sql_dao.read_sample_document_by_id(sample_document_id)
+        await sample_jsonb_sql_dao.read_sample_document_by_id(
+            get_database, sample_document_id
+        )
     )
     read_document_by_json_id: SampleDocument = (
         await sample_jsonb_sql_dao.read_sample_document_by_json_id(
-            create_request.json_data.id
+            get_database, create_request.json_data.id
         )
     )
     assert_that(read_document_by_json_id).is_equal_to(read_document_by_id)
 
 
 @pytest.mark.asyncio
-async def test_sample_document_read_all():
-    sample_id: UUID = await create_random_sample()
+async def test_sample_document_read_all(get_database: Database):
+    sample_id: UUID = await create_random_sample(get_database)
 
     create_request_1: SampleDocumentCreate = SampleDocumentCreate(
         sample_id=sample_id,
@@ -123,10 +122,12 @@ async def test_sample_document_read_all():
     )
 
     sample_document_id_1: UUID = await sample_jsonb_sql_dao.create_sample_document(
-        create_request_1
+        get_database, create_request_1
     )
     read_document_by_id_1: SampleDocument = (
-        await sample_jsonb_sql_dao.read_sample_document_by_id(sample_document_id_1)
+        await sample_jsonb_sql_dao.read_sample_document_by_id(
+            get_database, sample_document_id_1
+        )
     )
 
     create_request_2: SampleDocumentCreate = SampleDocumentCreate(
@@ -136,21 +137,25 @@ async def test_sample_document_read_all():
     )
 
     sample_document_id_2: UUID = await sample_jsonb_sql_dao.create_sample_document(
-        create_request_2
+        get_database, create_request_2
     )
     read_document_by_id_2: SampleDocument = (
-        await sample_jsonb_sql_dao.read_sample_document_by_id(sample_document_id_2)
+        await sample_jsonb_sql_dao.read_sample_document_by_id(
+            get_database, sample_document_id_2
+        )
     )
 
-    read_all: list[SampleDocument] = await sample_jsonb_sql_dao.read_sample_documents()
+    read_all: list[SampleDocument] = await sample_jsonb_sql_dao.read_sample_documents(
+        get_database,
+    )
     assert_that(read_all).is_length(2)
     assert_that(read_all[0]).is_equal_to(read_document_by_id_1)
     assert_that(read_all[1]).is_equal_to(read_document_by_id_2)
 
 
 @pytest.mark.asyncio
-async def test_sample_document_delete_all():
-    sample_id: UUID = await create_random_sample()
+async def test_sample_document_delete_all(get_database: Database):
+    sample_id: UUID = await create_random_sample(get_database)
 
     create_request_1: SampleDocumentCreate = SampleDocumentCreate(
         sample_id=sample_id,
@@ -162,7 +167,7 @@ async def test_sample_document_delete_all():
         },
     )
 
-    await sample_jsonb_sql_dao.create_sample_document(create_request_1)
+    await sample_jsonb_sql_dao.create_sample_document(get_database, create_request_1)
 
     create_request_2: SampleDocumentCreate = SampleDocumentCreate(
         sample_id=sample_id,
@@ -170,26 +175,26 @@ async def test_sample_document_delete_all():
         secondary_json_dict={},
     )
 
-    await sample_jsonb_sql_dao.create_sample_document(create_request_2)
+    await sample_jsonb_sql_dao.create_sample_document(get_database, create_request_2)
 
     read_all_before_delete: list[
         SampleDocument
-    ] = await sample_jsonb_sql_dao.read_sample_documents()
+    ] = await sample_jsonb_sql_dao.read_sample_documents(get_database)
     assert_that(read_all_before_delete).is_length(2)
 
-    await sample_jsonb_sql_dao.delete_sample_documents()
+    await sample_jsonb_sql_dao.delete_sample_documents(get_database)
 
     read_all_after_delete: list[
         SampleDocument
-    ] = await sample_jsonb_sql_dao.read_sample_documents()
+    ] = await sample_jsonb_sql_dao.read_sample_documents(get_database)
     assert_that(read_all_after_delete).is_empty()
 
 
-async def create_random_sample() -> UUID:
+async def create_random_sample(get_database: Database) -> UUID:
     create_sample_request: SampleCreate = SampleCreate(
         username=f"usr-{uuid.uuid4()}",
         bool_field=True,
         float_field=2.1,
         decimal_field=Decimal(3.4),
     )
-    return await sample_sql_dao.create_sample(create_sample_request)
+    return await sample_sql_dao.create_sample(get_database, create_sample_request)

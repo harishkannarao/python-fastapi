@@ -1,8 +1,8 @@
 from uuid import UUID
 
+from databases import Database
 from databases.backends.common.records import Record
 
-from app.db.database_config import database
 from app.model.request.sample import SampleCreate, SampleUpdate
 from app.model.response.sample import Sample
 
@@ -44,14 +44,14 @@ UPDATE_SAMPLE = """
     """
 
 
-async def read_samples(offset: int, limit: int) -> list[Sample]:
+async def read_samples(database: Database, offset: int, limit: int) -> list[Sample]:
     rows: list[Record] = await database.fetch_all(
         query=READ_SAMPLES, values={"offset": offset, "limit": limit}
     )
     return [Sample(**dict(row)) for row in rows]
 
 
-async def read_sample_by_id(sample_id: UUID) -> Sample | None:
+async def read_sample_by_id(database: Database, sample_id: UUID) -> Sample | None:
     row: Record = await database.fetch_one(
         query=READ_SAMPLE_BY_ID, values={"id": sample_id}
     )
@@ -61,26 +61,28 @@ async def read_sample_by_id(sample_id: UUID) -> Sample | None:
         return None
 
 
-async def create_sample(sample: SampleCreate) -> UUID:
+async def create_sample(database: Database, sample: SampleCreate) -> UUID:
     inserted_row: Record = await database.fetch_one(
         query=INSERT_SAMPLE, values=vars(sample)
     )
     return inserted_row["id"]
 
 
-async def update_sample(sample: SampleUpdate) -> list[UUID]:
+async def update_sample(database: Database, sample: SampleUpdate) -> list[UUID]:
     updated_rows: list[Record] = await database.fetch_all(
         query=UPDATE_SAMPLE, values=vars(sample)
     )
     return [row["id"] for row in updated_rows]
 
 
-async def delete_by_id(sample_id: UUID) -> UUID:
+async def delete_by_id(database: Database, sample_id: UUID) -> UUID:
     inserted_row: Record = await database.fetch_one(
         query=DELETE_SAMPLE_BY_ID, values={"id": sample_id}
     )
     return inserted_row["id"]
 
 
-async def delete_samples() -> None:
+async def delete_samples(
+    database: Database,
+) -> None:
     await database.execute(query=DELETE_SAMPLES)
