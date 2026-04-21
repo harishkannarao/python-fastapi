@@ -6,14 +6,14 @@ from sqlmodel import Session
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.db.database_config import (
-    get_database,
+    database,
     create_session,
     create_async_session,
 )
 
 
 def get_database_dep() -> Database:
-    return get_database()
+    return database
 
 
 DatabaseDep = Annotated[Database, Depends(get_database_dep)]

@@ -38,11 +38,8 @@ def test_client(
 
 @pytest.fixture
 def mock_get_database(mocker: MockerFixture) -> MagicMock:
-    mock_get_database: MagicMock = mocker.patch(
-        "app.db.database_dependencies.get_database"
-    )
     mock_database = MagicMock(spec=Database)
-    mock_get_database.return_value = mock_database
+    mocker.patch("app.db.database_dependencies.database", mock_database)
     return mock_database
 
 

@@ -23,10 +23,6 @@ database = Database(
 )
 
 
-def get_database() -> Database:
-    return database
-
-
 engine = create_engine(
     DATABASE_URL,
     pool_size=settings.app_db_min_con,

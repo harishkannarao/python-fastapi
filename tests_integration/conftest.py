@@ -20,10 +20,12 @@ import app.config as config
 import app.dao.sample_jsonb_sql_dao as sample_jsonb_sql_dao
 import app.dao.sample_sql_dao as sample_sql_dao
 import app.db.database_config as database_config
+import app.db.database_dependencies as database_dependencies
 import app.main as main
 
 DB_MODULES_TO_RELOAD = [
     database_config,
+    database_dependencies,
     sample_sql_dao,
     sample_jsonb_sql_dao,
 ]
