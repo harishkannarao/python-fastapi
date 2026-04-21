@@ -12,8 +12,9 @@ from app.db.database_config import (
 )
 
 
-def get_database_dep() -> Database:
-    return database
+async def get_database_dep() -> AsyncGenerator[Database, Any]:
+    async with database.transaction():
+        yield database
 
 
 DatabaseDep = Annotated[Database, Depends(get_database_dep)]
