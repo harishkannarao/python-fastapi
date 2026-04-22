@@ -145,7 +145,9 @@ async def test_sample_document_read_all(get_database: Database):
         )
     )
 
-    read_all: list[SampleDocument] = await sample_jsonb_sql_dao.read_sample_documents(
+    read_all: tuple[
+        SampleDocument, ...
+    ] = await sample_jsonb_sql_dao.read_sample_documents(
         get_database,
     )
     assert_that(read_all).is_length(2)
@@ -177,15 +179,15 @@ async def test_sample_document_delete_all(get_database: Database):
 
     await sample_jsonb_sql_dao.create_sample_document(get_database, create_request_2)
 
-    read_all_before_delete: list[
-        SampleDocument
+    read_all_before_delete: tuple[
+        SampleDocument, ...
     ] = await sample_jsonb_sql_dao.read_sample_documents(get_database)
     assert_that(read_all_before_delete).is_length(2)
 
     await sample_jsonb_sql_dao.delete_sample_documents(get_database)
 
-    read_all_after_delete: list[
-        SampleDocument
+    read_all_after_delete: tuple[
+        SampleDocument, ...
     ] = await sample_jsonb_sql_dao.read_sample_documents(get_database)
     assert_that(read_all_after_delete).is_empty()
 

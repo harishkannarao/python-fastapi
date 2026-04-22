@@ -36,9 +36,9 @@ INSERT_SAMPLE_DOCUMENT = """
 DELETE_SAMPLES_DOCUMENTS = "TRUNCATE TABLE sample_documents"
 
 
-async def read_sample_documents(database: Database) -> list[SampleDocument]:
+async def read_sample_documents(database: Database) -> tuple[SampleDocument, ...]:
     rows: list[Record] = await database.fetch_all(query=READ_SAMPLES_DOCUMENTS)
-    return [map_from_db_row(row) for row in rows]
+    return tuple([map_from_db_row(row) for row in rows])
 
 
 async def read_sample_document_by_id(

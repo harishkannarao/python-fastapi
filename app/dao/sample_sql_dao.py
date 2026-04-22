@@ -44,11 +44,13 @@ UPDATE_SAMPLE = """
     """
 
 
-async def read_samples(database: Database, offset: int, limit: int) -> list[Sample]:
+async def read_samples(
+    database: Database, offset: int, limit: int
+) -> tuple[Sample, ...]:
     rows: list[Record] = await database.fetch_all(
         query=READ_SAMPLES, values={"offset": offset, "limit": limit}
     )
-    return [Sample(**dict(row)) for row in rows]
+    return tuple([Sample(**dict(row)) for row in rows])
 
 
 async def read_sample_by_id(database: Database, sample_id: UUID) -> Sample | None:

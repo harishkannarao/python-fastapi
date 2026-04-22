@@ -56,12 +56,12 @@ async def test_sample_read_all_with_offset_and_limit(get_database: Database):
     )
     sample_3 = await sample_sql_dao.read_sample_by_id(get_database, sample_id_3)
 
-    read_1: list[Sample] = await sample_sql_dao.read_samples(get_database, 0, 2)
+    read_1: tuple[Sample, ...] = await sample_sql_dao.read_samples(get_database, 0, 2)
     assert_that(read_1).is_length(2)
     assert_that(read_1[0]).is_equal_to(sample_1)
     assert_that(read_1[1]).is_equal_to(sample_2)
 
-    read_2: list[Sample] = await sample_sql_dao.read_samples(get_database, 1, 2)
+    read_2: tuple[Sample, ...] = await sample_sql_dao.read_samples(get_database, 1, 2)
     assert_that(read_2).is_length(2)
     assert_that(read_2[0]).is_equal_to(sample_2)
     assert_that(read_2[1]).is_equal_to(sample_3)
@@ -101,7 +101,7 @@ async def test_sample_delete_all(get_database: Database):
 
     await sample_sql_dao.delete_samples(get_database)
 
-    read_after_delete: list[Sample] = await sample_sql_dao.read_samples(
+    read_after_delete: tuple[Sample, ...] = await sample_sql_dao.read_samples(
         get_database, 0, 1
     )
 
