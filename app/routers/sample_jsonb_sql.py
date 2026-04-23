@@ -4,7 +4,6 @@ from uuid import UUID
 import structlog
 from asyncpg.exceptions import UniqueViolationError, ForeignKeyViolationError
 from fastapi import APIRouter, Response, HTTPException
-from sqlalchemy.exc import IntegrityError
 
 from app.dao.sample_jsonb_sql_dao import (
     read_sample_documents,
@@ -58,25 +57,23 @@ async def create_sample_document_handler(
     try:
         created_id = await create_sample_document(database, input_document)
         return await read_sample_document_by_id(database, created_id)
-    except IntegrityError as ie:
+    except UniqueViolationError as uve:
         logger = structlog.get_logger()
-        logger.error(f"IntegrityError!: {repr(ie)}")
-        sqlstate: str = getattr(ie.orig, "sqlstate")
-        if sqlstate == UniqueViolationError.sqlstate:
-            raise HTTPException(
-                status_code=409,
-                detail={
-                    "key": "$.json_id.id",
-                    "value": str(input_document.json_data.id),
-                },
-            )
-        elif sqlstate == ForeignKeyViolationError.sqlstate:
-            raise HTTPException(
-                status_code=422,
-                detail={"key": "$.sample_id", "value": str(input_document.sample_id)},
-            )
-        else:
-            raise ie
+        logger.error(f"UniqueViolationError!: {repr(uve)}")
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "key": "$.json_id.id",
+                "value": str(input_document.json_data.id),
+            },
+        )
+    except ForeignKeyViolationError as fkve:
+        logger = structlog.get_logger()
+        logger.error(f"ForeignKeyViolationError!: {repr(fkve)}")
+        raise HTTPException(
+            status_code=422,
+            detail={"key": "$.sample_id", "value": str(input_document.sample_id)},
+        )
 
 
 @router.delete("", status_code=204)

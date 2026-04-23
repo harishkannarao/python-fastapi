@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 from pprint import pprint
-from typing import Generator
+from typing import Generator, MutableMapping, Any
 
 import pytest
 from assertpy import assert_that
@@ -45,107 +45,109 @@ def test_sample_jsonb_orm_create(delete_all_fixture: None, test_client: TestClie
     assert_created_response_entity(response_entity, request_entity)
 
 
-# @pytest.mark.parametrize(
-#     "raise_server_exceptions, expected_status",
-#     [(False, 409)],
-#     indirect=["raise_server_exceptions"],
-# )
-# def test_sample_jsonb_orm_create_with_duplicate_json_id_returns_409(
-#     raise_server_exceptions: bool,
-#     delete_all_fixture: None,
-#     test_client: TestClient,
-#     expected_status: int,
-#     captured_logs: list[MutableMapping[str, Any]],
-# ):
-#     sample = create_random_sample(test_client)
-#
-#     request_entity: SampleDocumentCreate = SampleDocumentCreate(
-#         sample_id=sample.id,
-#         json_data=DocumentMetadata(id=uuid.uuid4(), tags=tuple(["tag1", "tag2"])),
-#         secondary_json_dict={"key": "value"},
-#     )
-#     http_response = test_client.put(
-#         SAMPLE_JSONB_SQL_ENDPOINT, json=jsonable_encoder(request_entity)
-#     )
-#     assert_that(http_response.status_code).is_equal_to(200)
-#     request_entity_with_duplicate_id: SampleDocumentCreate = SampleDocumentCreate(
-#         sample_id=sample.id,
-#         json_data=DocumentMetadata(
-#             id=request_entity.json_data.id, tags=tuple(["tag1", "tag2"])
-#         ),
-#         secondary_json_dict={"key": "value"},
-#     )
-#     http_response_with_duplicate_id = test_client.put(
-#         SAMPLE_JSONB_SQL_ENDPOINT,
-#         json=jsonable_encoder(request_entity_with_duplicate_id),
-#     )
-#     assert_that(http_response_with_duplicate_id.status_code).is_equal_to(
-#         expected_status
-#     )
-#     expected_body: dict[str, Any] = {
-#         "detail": {"key": "$.json_id.id", "value": str(request_entity.json_data.id)}
-#     }
-#     assert_that(http_response_with_duplicate_id.json()).is_equal_to(expected_body)
-#     assert_that(len(captured_logs)).is_greater_than(0)
-#     assert_that(
-#         list(
-#             filter(
-#                 lambda entry: str(entry["event"]).startswith("IntegrityError!"),
-#                 captured_logs,
-#             )
-#         )
-#     ).is_length(1)
-#     assert_that(
-#         list(
-#             filter(
-#                 lambda entry: str(entry["event"]).startswith("An HTTP error!"),
-#                 captured_logs,
-#             )
-#         )
-#     ).is_length(1)
-#
-#
-# @pytest.mark.parametrize(
-#     "raise_server_exceptions",
-#     [False],
-#     indirect=True,
-# )
-# def test_sample_jsonb_orm_create_with_non_existent_parent_sample_returns_422(
-#     raise_server_exceptions: bool,
-#     delete_all_fixture: None,
-#     test_client: TestClient,
-#     captured_logs: list[MutableMapping[str, Any]],
-# ):
-#     request_entity: SampleDocumentCreate = SampleDocumentCreate(
-#         sample_id=uuid.uuid4(),
-#         json_data=DocumentMetadata(id=uuid.uuid4(), tags=tuple(["tag1", "tag2"])),
-#         secondary_json_dict={"key": "value"},
-#     )
-#     http_response = test_client.put(
-#         SAMPLE_JSONB_SQL_ENDPOINT, json=jsonable_encoder(request_entity)
-#     )
-#     assert_that(http_response.status_code).is_equal_to(422)
-#     expected_body: dict[str, Any] = {
-#         "detail": {"key": "$.sample_id", "value": str(request_entity.sample_id)}
-#     }
-#     assert_that(http_response.json()).is_equal_to(expected_body)
-#     assert_that(len(captured_logs)).is_greater_than(0)
-#     assert_that(
-#         list(
-#             filter(
-#                 lambda entry: str(entry["event"]).startswith("IntegrityError!"),
-#                 captured_logs,
-#             )
-#         )
-#     ).is_length(1)
-#     assert_that(
-#         list(
-#             filter(
-#                 lambda entry: str(entry["event"]).startswith("An HTTP error!"),
-#                 captured_logs,
-#             )
-#         )
-#     ).is_length(1)
+@pytest.mark.parametrize(
+    "raise_server_exceptions, expected_status",
+    [(False, 409)],
+    indirect=["raise_server_exceptions"],
+)
+def test_sample_jsonb_orm_create_with_duplicate_json_id_returns_409(
+    raise_server_exceptions: bool,
+    delete_all_fixture: None,
+    test_client: TestClient,
+    expected_status: int,
+    captured_logs: list[MutableMapping[str, Any]],
+):
+    sample = create_random_sample(test_client)
+
+    request_entity: SampleDocumentCreate = SampleDocumentCreate(
+        sample_id=sample.id,
+        json_data=DocumentMetadata(id=uuid.uuid4(), tags=tuple(["tag1", "tag2"])),
+        secondary_json_dict={"key": "value"},
+    )
+    http_response = test_client.put(
+        SAMPLE_JSONB_SQL_ENDPOINT, json=jsonable_encoder(request_entity)
+    )
+    assert_that(http_response.status_code).is_equal_to(200)
+    request_entity_with_duplicate_id: SampleDocumentCreate = SampleDocumentCreate(
+        sample_id=sample.id,
+        json_data=DocumentMetadata(
+            id=request_entity.json_data.id, tags=tuple(["tag1", "tag2"])
+        ),
+        secondary_json_dict={"key": "value"},
+    )
+    http_response_with_duplicate_id = test_client.put(
+        SAMPLE_JSONB_SQL_ENDPOINT,
+        json=jsonable_encoder(request_entity_with_duplicate_id),
+    )
+    assert_that(http_response_with_duplicate_id.status_code).is_equal_to(
+        expected_status
+    )
+    expected_body: dict[str, Any] = {
+        "detail": {"key": "$.json_id.id", "value": str(request_entity.json_data.id)}
+    }
+    assert_that(http_response_with_duplicate_id.json()).is_equal_to(expected_body)
+    assert_that(len(captured_logs)).is_greater_than(0)
+    assert_that(
+        list(
+            filter(
+                lambda entry: str(entry["event"]).startswith("UniqueViolationError!"),
+                captured_logs,
+            )
+        )
+    ).is_length(1)
+    assert_that(
+        list(
+            filter(
+                lambda entry: str(entry["event"]).startswith("An HTTP error!"),
+                captured_logs,
+            )
+        )
+    ).is_length(1)
+
+
+@pytest.mark.parametrize(
+    "raise_server_exceptions",
+    [False],
+    indirect=True,
+)
+def test_sample_jsonb_orm_create_with_non_existent_parent_sample_returns_422(
+    raise_server_exceptions: bool,
+    delete_all_fixture: None,
+    test_client: TestClient,
+    captured_logs: list[MutableMapping[str, Any]],
+):
+    request_entity: SampleDocumentCreate = SampleDocumentCreate(
+        sample_id=uuid.uuid4(),
+        json_data=DocumentMetadata(id=uuid.uuid4(), tags=tuple(["tag1", "tag2"])),
+        secondary_json_dict={"key": "value"},
+    )
+    http_response = test_client.put(
+        SAMPLE_JSONB_SQL_ENDPOINT, json=jsonable_encoder(request_entity)
+    )
+    assert_that(http_response.status_code).is_equal_to(422)
+    expected_body: dict[str, Any] = {
+        "detail": {"key": "$.sample_id", "value": str(request_entity.sample_id)}
+    }
+    assert_that(http_response.json()).is_equal_to(expected_body)
+    assert_that(len(captured_logs)).is_greater_than(0)
+    assert_that(
+        list(
+            filter(
+                lambda entry: str(entry["event"]).startswith(
+                    "ForeignKeyViolationError!"
+                ),
+                captured_logs,
+            )
+        )
+    ).is_length(1)
+    assert_that(
+        list(
+            filter(
+                lambda entry: str(entry["event"]).startswith("An HTTP error!"),
+                captured_logs,
+            )
+        )
+    ).is_length(1)
 
 
 def test_sample_jsonb_orm_read_all(delete_all_fixture: None, test_client: TestClient):
