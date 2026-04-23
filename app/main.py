@@ -19,8 +19,9 @@ from app.db_schema_migrations.yoyo_migration import apply_db_migrations
 from app.logging.logging_config import setup_logging
 from app.middleware.process_time import ProcessTimeMiddleware
 from app.middleware.request_id import RequestIdMiddleware, create_request_context
-from app.routers.sample_orm import router as sample_router
-from app.routers.sample_jsonb_orm import router as sample_document_router
+from app.routers.sample_orm import router as sample_orm_router
+from app.routers.sample_jsonb_orm import router as sample_document_orm_router
+from app.routers.sample_sql import router as sample_sql_router
 from app.routers.sample_orm_transaction import router as sample_orm_transaction_router
 from app.routers.sample_sql_transaction import router as sample_sql_transaction_router
 from app.routers.customer import router as customer_router
@@ -33,8 +34,9 @@ setup_logging(json_logs=settings.app_json_logs, db_logs=settings.app_db_log_sql)
 
 context = FastAPI(openapi_url=settings.app_open_api_url)
 
-context.include_router(sample_router)
-context.include_router(sample_document_router)
+context.include_router(sample_orm_router)
+context.include_router(sample_document_orm_router)
+context.include_router(sample_sql_router)
 context.include_router(sample_orm_transaction_router)
 context.include_router(sample_sql_transaction_router)
 context.include_router(customer_router)

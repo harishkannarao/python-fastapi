@@ -163,6 +163,12 @@ async def test_sample_delete(get_database: Database):
 
     assert_that(read_after_delete).is_none()
 
+    deleted_id_for_idempotency = await sample_sql_dao.delete_by_id(
+        get_database, sample_id
+    )
+
+    assert_that(deleted_id_for_idempotency).is_none()
+
 
 @pytest.mark.asyncio
 async def test_sample_update_and_read(get_database: Database):

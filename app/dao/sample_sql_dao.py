@@ -77,11 +77,14 @@ async def update_sample(database: Database, sample: SampleUpdate) -> list[UUID]:
     return [row["id"] for row in updated_rows]
 
 
-async def delete_by_id(database: Database, sample_id: UUID) -> UUID:
+async def delete_by_id(database: Database, sample_id: UUID) -> UUID | None:
     inserted_row: Record = await database.fetch_one(
         query=DELETE_SAMPLE_BY_ID, values={"id": sample_id}
     )
-    return inserted_row["id"]
+    if inserted_row:
+        return inserted_row["id"]
+    else:
+        return None
 
 
 async def delete_samples(
