@@ -22,6 +22,7 @@ from app.middleware.request_id import RequestIdMiddleware, create_request_contex
 from app.routers.sample_orm import router as sample_orm_router
 from app.routers.sample_jsonb_orm import router as sample_document_orm_router
 from app.routers.sample_sql import router as sample_sql_router
+from app.routers.sample_jsonb_sql import router as sample_jsonb_sql_router
 from app.routers.sample_orm_transaction import router as sample_orm_transaction_router
 from app.routers.sample_sql_transaction import router as sample_sql_transaction_router
 from app.routers.customer import router as customer_router
@@ -37,6 +38,7 @@ context = FastAPI(openapi_url=settings.app_open_api_url)
 context.include_router(sample_orm_router)
 context.include_router(sample_document_orm_router)
 context.include_router(sample_sql_router)
+context.include_router(sample_jsonb_sql_router)
 context.include_router(sample_orm_transaction_router)
 context.include_router(sample_sql_transaction_router)
 context.include_router(customer_router)

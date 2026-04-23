@@ -14,7 +14,7 @@ from httpx import Response
 from app.model.request.sample import SampleCreate, SampleUpdate
 from app.model.response.sample import Sample
 
-SAMPLE_ORM_ENDPOINT = "/context/samples/sql"
+SAMPLE_SQL_ENDPOINT = "/context/samples/sql"
 
 
 @pytest.fixture
@@ -32,7 +32,7 @@ def test_sample_orm_create(delete_all_samples_fixture: None, test_client: TestCl
         decimal_field=Decimal("0.5"),
     )
     http_response = test_client.put(
-        SAMPLE_ORM_ENDPOINT, json=jsonable_encoder(request_entity)
+        SAMPLE_SQL_ENDPOINT, json=jsonable_encoder(request_entity)
     )
     assert_that(http_response.status_code).is_equal_to(200)
     response_entity: Sample = Sample(**http_response.json())
@@ -49,14 +49,14 @@ def test_sample_orm_read_by_id(
         decimal_field=Decimal("0.5"),
     )
     http_create_response = test_client.put(
-        SAMPLE_ORM_ENDPOINT, json=jsonable_encoder(request_entity)
+        SAMPLE_SQL_ENDPOINT, json=jsonable_encoder(request_entity)
     )
     assert_that(http_create_response.status_code).is_equal_to(200)
     created_entity: Sample = Sample(**http_create_response.json())
     assert_created_response_entity(created_entity, request_entity)
 
     http_read_by_id_response = test_client.get(
-        f"{SAMPLE_ORM_ENDPOINT}/{created_entity.id}"
+        f"{SAMPLE_SQL_ENDPOINT}/{created_entity.id}"
     )
     assert_that(http_read_by_id_response.status_code).is_equal_to(200)
     read_entity: Sample = Sample(**http_read_by_id_response.json())
@@ -71,7 +71,7 @@ def test_sample_orm_read_all(delete_all_samples_fixture: None, test_client: Test
         decimal_field=Decimal("0.5"),
     )
     create_1_response = test_client.put(
-        SAMPLE_ORM_ENDPOINT, json=jsonable_encoder(create_1)
+        SAMPLE_SQL_ENDPOINT, json=jsonable_encoder(create_1)
     )
     assert_that(create_1_response.status_code).is_equal_to(200)
     sample_1: Sample = Sample(**create_1_response.json())
@@ -83,12 +83,12 @@ def test_sample_orm_read_all(delete_all_samples_fixture: None, test_client: Test
         decimal_field=None,
     )
     create_2_response = test_client.put(
-        SAMPLE_ORM_ENDPOINT, json=jsonable_encoder(create_2)
+        SAMPLE_SQL_ENDPOINT, json=jsonable_encoder(create_2)
     )
     assert_that(create_2_response.status_code).is_equal_to(200)
     sample_2: Sample = Sample(**create_2_response.json())
 
-    http_read_all_response = test_client.get(SAMPLE_ORM_ENDPOINT)
+    http_read_all_response = test_client.get(SAMPLE_SQL_ENDPOINT)
     assert_that(http_read_all_response.status_code).is_equal_to(200)
 
     all_samples = [Sample(**item) for item in http_read_all_response.json()]
@@ -103,7 +103,7 @@ def test_sample_orm_read_all(delete_all_samples_fixture: None, test_client: Test
 
     delete_all_samples(test_client)
 
-    http_read_all_after_delete = test_client.get(SAMPLE_ORM_ENDPOINT)
+    http_read_all_after_delete = test_client.get(SAMPLE_SQL_ENDPOINT)
     assert_that(http_read_all_after_delete.status_code).is_equal_to(200)
 
     empty_samples = [Sample(**item) for item in http_read_all_after_delete.json()]
@@ -119,7 +119,7 @@ def test_sample_orm_read_all_with_pagination(
     sample_4: Sample = create_random_sample(test_client)
 
     first_and_second_response = test_client.get(
-        SAMPLE_ORM_ENDPOINT,
+        SAMPLE_SQL_ENDPOINT,
         params={
             "limit": "2",
         },
@@ -137,7 +137,7 @@ def test_sample_orm_read_all_with_pagination(
     ).contains_only(sample_2)
 
     second_and_third_response = test_client.get(
-        SAMPLE_ORM_ENDPOINT,
+        SAMPLE_SQL_ENDPOINT,
         params={
             "offset": "1",
             "limit": "2",
@@ -156,7 +156,7 @@ def test_sample_orm_read_all_with_pagination(
     ).contains_only(sample_3)
 
     fourth_response = test_client.get(
-        SAMPLE_ORM_ENDPOINT,
+        SAMPLE_SQL_ENDPOINT,
         params={
             "offset": "3",
         },
@@ -175,7 +175,7 @@ def test_sample_orm_update(delete_all_samples_fixture: None, test_client: TestCl
         decimal_field=Decimal("0.5"),
     )
     create_response = test_client.put(
-        SAMPLE_ORM_ENDPOINT, json=jsonable_encoder(create_request)
+        SAMPLE_SQL_ENDPOINT, json=jsonable_encoder(create_request)
     )
     assert_that(create_response.status_code).is_equal_to(200)
     created_sample: Sample = Sample(**create_response.json())
@@ -191,20 +191,20 @@ def test_sample_orm_update(delete_all_samples_fixture: None, test_client: TestCl
         decimal_field=None,
     )
     update_response = test_client.post(
-        SAMPLE_ORM_ENDPOINT, json=jsonable_encoder(update_request)
+        SAMPLE_SQL_ENDPOINT, json=jsonable_encoder(update_request)
     )
     assert_that(update_response.status_code).is_equal_to(200)
     updated_sample: Sample = Sample(**update_response.json())
     assert_updated_response_entity(updated_sample, created_sample, update_request)
 
-    read_after_update = test_client.get(f"{SAMPLE_ORM_ENDPOINT}/{created_sample.id}")
+    read_after_update = test_client.get(f"{SAMPLE_SQL_ENDPOINT}/{created_sample.id}")
     assert_that(read_after_update.status_code).is_equal_to(200)
     sample = Sample(**read_after_update.json())
     assert_that(sample).is_equal_to(updated_sample)
 
     # returns 409 for version mismatch
     second_update_response = test_client.post(
-        SAMPLE_ORM_ENDPOINT, json=jsonable_encoder(update_request)
+        SAMPLE_SQL_ENDPOINT, json=jsonable_encoder(update_request)
     )
     assert_that(second_update_response.status_code).is_equal_to(409)
 
@@ -219,34 +219,34 @@ def test_sample_orm_delete_by_id(
         decimal_field=Decimal("0.5"),
     )
     create_response = test_client.put(
-        SAMPLE_ORM_ENDPOINT, json=jsonable_encoder(create_request)
+        SAMPLE_SQL_ENDPOINT, json=jsonable_encoder(create_request)
     )
     assert_that(create_response.status_code).is_equal_to(200)
     created_sample: Sample = Sample(**create_response.json())
     assert_created_response_entity(created_sample, create_request)
 
     delete_by_id_response = test_client.delete(
-        f"{SAMPLE_ORM_ENDPOINT}/{created_sample.id}"
+        f"{SAMPLE_SQL_ENDPOINT}/{created_sample.id}"
     )
     assert_that(delete_by_id_response.status_code).is_equal_to(204)
 
-    read_after_delete = test_client.get(f"{SAMPLE_ORM_ENDPOINT}/{created_sample.id}")
+    read_after_delete = test_client.get(f"{SAMPLE_SQL_ENDPOINT}/{created_sample.id}")
     assert_that(read_after_delete.status_code).is_equal_to(404)
 
-    http_read_all_after_delete = test_client.get(SAMPLE_ORM_ENDPOINT)
+    http_read_all_after_delete = test_client.get(SAMPLE_SQL_ENDPOINT)
     assert_that(http_read_all_after_delete.status_code).is_equal_to(200)
 
     empty_samples = [Sample(**item) for item in http_read_all_after_delete.json()]
     assert_that(empty_samples).is_empty()
 
     delete_by_id_again_for_idempotency = test_client.delete(
-        f"{SAMPLE_ORM_ENDPOINT}/{created_sample.id}"
+        f"{SAMPLE_SQL_ENDPOINT}/{created_sample.id}"
     )
     assert_that(delete_by_id_again_for_idempotency.status_code).is_equal_to(204)
 
 
 def delete_all_samples(test_client: TestClient) -> None:
-    delete_all_response: Response = test_client.delete(SAMPLE_ORM_ENDPOINT)
+    delete_all_response: Response = test_client.delete(SAMPLE_SQL_ENDPOINT)
     assert_that(delete_all_response.status_code).is_equal_to(204)
 
 
@@ -288,7 +288,7 @@ def create_random_sample(test_client: TestClient) -> Sample:
         decimal_field=Decimal("0.5"),
     )
     response = test_client.put(
-        SAMPLE_ORM_ENDPOINT, json=jsonable_encoder(request_entity)
+        SAMPLE_SQL_ENDPOINT, json=jsonable_encoder(request_entity)
     )
     assert_that(response.status_code).is_equal_to(200)
     return Sample(**response.json())

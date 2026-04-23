@@ -1,0 +1,84 @@
+import uuid
+from uuid import UUID
+
+import structlog
+from asyncpg.exceptions import UniqueViolationError, ForeignKeyViolationError
+from fastapi import APIRouter, Response, HTTPException
+from sqlalchemy.exc import IntegrityError
+
+from app.dao.sample_jsonb_sql_dao import (
+    read_sample_documents,
+    read_sample_document_by_id,
+    read_sample_document_by_json_id,
+    create_sample_document,
+    delete_sample_documents,
+)
+from app.db.database_dependencies import DatabaseDep
+from app.model.request.sample_document import SampleDocumentCreate
+from app.model.response.sample_document import SampleDocument
+
+router = APIRouter(prefix="/samples/jsonb/sql", tags=["samples", "sql", "jsonb"])
+
+
+@router.get("")
+async def read_documents_handler(
+    database: DatabaseDep,
+) -> list[SampleDocument]:
+    return list(await read_sample_documents(database))
+
+
+@router.get("/{sample_document_id}")
+async def read_sample_document_by_id_handler(
+    database: DatabaseDep, sample_document_id: UUID, response: Response
+) -> SampleDocument | None:
+    result: SampleDocument | None = await read_sample_document_by_id(
+        database, sample_document_id
+    )
+    if result is None:
+        response.status_code = 404
+    return result
+
+
+@router.get("/json_id/{json_id}")
+async def read_sample_document_by_json_id_handler(
+    database: DatabaseDep, json_id: str, response: Response
+) -> SampleDocument | None:
+    result: SampleDocument | None = await read_sample_document_by_json_id(
+        database, uuid.UUID(json_id)
+    )
+    if result is None:
+        response.status_code = 404
+    return result
+
+
+@router.put("")
+async def create_sample_document_handler(
+    database: DatabaseDep, input_document: SampleDocumentCreate
+) -> SampleDocument:
+    try:
+        created_id = await create_sample_document(database, input_document)
+        return await read_sample_document_by_id(database, created_id)
+    except IntegrityError as ie:
+        logger = structlog.get_logger()
+        logger.error(f"IntegrityError!: {repr(ie)}")
+        sqlstate: str = getattr(ie.orig, "sqlstate")
+        if sqlstate == UniqueViolationError.sqlstate:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "key": "$.json_id.id",
+                    "value": str(input_document.json_data.id),
+                },
+            )
+        elif sqlstate == ForeignKeyViolationError.sqlstate:
+            raise HTTPException(
+                status_code=422,
+                detail={"key": "$.sample_id", "value": str(input_document.sample_id)},
+            )
+        else:
+            raise ie
+
+
+@router.delete("", status_code=204)
+async def delete_all_handler(database: DatabaseDep) -> None:
+    return await delete_sample_documents(database)
