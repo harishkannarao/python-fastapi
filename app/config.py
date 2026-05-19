@@ -23,7 +23,7 @@ class Settings(BaseSettings):
 
     # rabbit mq broker settings start
     app_rabbit_mq_host: str = "localhost"
-    app_rabbit_mq_port: int = 5762
+    app_rabbit_mq_port: int = 5672
     app_rabbit_mq_vhost: str = ""
     app_rabbit_mq_username: str = "guest"
     app_rabbit_mq_password: str = "guest"
