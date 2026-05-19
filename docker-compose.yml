@@ -15,6 +15,19 @@ services:
       main:
         aliases:
           - python-fastapi-postgres
+  python-fastapi-rabbitmq:
+    container_name: python-fastapi-rabbitmq
+    image: "rabbitmq:3-management-alpine"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - "RABBITMQ_DEFAULT_USER=guest"
+      - "RABBITMQ_DEFAULT_PASS=guest"
+    networks:
+      main:
+        aliases:
+          - python-fastapi-rabbitmq
   prism-mock-open-api:
     container_name: prism-mock-open-api
     image: "public.ecr.aws/logistics/stoplight/prism:3.2.7"

@@ -19,11 +19,16 @@ from testcontainers.core.container import DockerContainer
 import app.config as config
 import app.db.database_config as database_config
 import app.db.database_dependencies as database_dependencies
+import app.rabbit_mq_setup.rabbit_mq_initialisation as rabbit_mq_initialisation
 import app.main as main
 
 DB_MODULES_TO_RELOAD = [
     database_config,
     database_dependencies,
+]
+
+RABBIT_MQ_MODULES_TO_RELOAD = [
+    rabbit_mq_initialisation,
 ]
 
 
@@ -34,14 +39,14 @@ def postgres_docker_container() -> Generator[DockerContainer, None, None]:
         "POSTGRES_PASSWORD": "superpassword",
     }
     with DockerContainer(
-            image="postgres:18-alpine",
-            env=env_vars,
-            ports=[5432],
+        image="postgres:18-alpine",
+        env=env_vars,
+        ports=[5432],
     ) as container:
         # wait for the container to start
         time.sleep(0.5)
         for attempt in Retrying(
-                stop=stop_after_delay(10), wait=wait_fixed(0.5), reraise=True
+            stop=stop_after_delay(10), wait=wait_fixed(0.5), reraise=True
         ):
             with attempt:
                 stdout, stderr = container.get_logs()
@@ -57,14 +62,14 @@ def rabbitmq_docker_container() -> Generator[DockerContainer, None, None]:
         "RABBITMQ_DEFAULT_PASS": "guest",
     }
     with DockerContainer(
-            image="rabbitmq:3-management-alpine",
-            env=env_vars,
-            ports=[5672, 15672],
+        image="rabbitmq:3-management-alpine",
+        env=env_vars,
+        ports=[5672, 15672],
     ) as container:
         # wait for the container to start
         time.sleep(0.5)
         for attempt in Retrying(
-                stop=stop_after_delay(20), wait=wait_fixed(0.5), reraise=True
+            stop=stop_after_delay(20), wait=wait_fixed(0.5), reraise=True
         ):
             with attempt:
                 stdout, stderr = container.get_logs()
@@ -81,12 +86,13 @@ def raise_server_exceptions(request) -> bool:
 
 @pytest.fixture
 def test_client(
-        mock_external_faq_server: HTTPServer,
-        log_db_statements: config.Settings,
-        change_postgres_db_host: config.Settings,
-        change_postgres_db_port: config.Settings,
-        raise_server_exceptions: bool,
-        rabbitmq_docker_container: DockerContainer
+    mock_external_faq_server: HTTPServer,
+    log_db_statements: config.Settings,
+    change_postgres_db_host: config.Settings,
+    change_postgres_db_port: config.Settings,
+    change_rabbit_mq_host: config.Settings,
+    change_rabbit_mq_port: config.Settings,
+    raise_server_exceptions: bool,
 ) -> Generator[TestClient, None, None]:
     app = reload(main).app
     with TestClient(app, raise_server_exceptions=raise_server_exceptions) as client:
@@ -96,7 +102,7 @@ def test_client(
 
 @pytest.fixture
 def mock_external_faq_server(
-        monkeypatch: MonkeyPatch,
+    monkeypatch: MonkeyPatch,
 ) -> Generator[HTTPServer, None, None]:
     with HTTPServer() as httpserver:
         test_url: str = f"http://{httpserver.host}:{httpserver.port}"
@@ -109,7 +115,7 @@ def mock_external_faq_server(
 
 @pytest.fixture
 def change_postgres_db_host(
-        postgres_docker_container: DockerContainer, monkeypatch: MonkeyPatch
+    postgres_docker_container: DockerContainer, monkeypatch: MonkeyPatch
 ) -> Generator[config.Settings, None, None]:
     name = "APP_DB_HOST"
     original_value = os.getenv(name)
@@ -127,7 +133,7 @@ def change_postgres_db_host(
 
 @pytest.fixture
 def change_postgres_db_port(
-        postgres_docker_container: DockerContainer, monkeypatch: MonkeyPatch
+    postgres_docker_container: DockerContainer, monkeypatch: MonkeyPatch
 ) -> Generator[config.Settings, None, None]:
     name = "APP_DB_PORT"
     original_value = os.getenv(name)
@@ -144,8 +150,44 @@ def change_postgres_db_port(
 
 
 @pytest.fixture
+def change_rabbit_mq_host(
+    rabbitmq_docker_container: DockerContainer, monkeypatch: MonkeyPatch
+) -> Generator[config.Settings, None, None]:
+    name = "APP_RABBIT_MQ_HOST"
+    original_value = os.getenv(name)
+    new_value = rabbitmq_docker_container.get_container_host_ip()
+    # set new value, reload module and yield setting
+    new_settings = patch_env_var(monkeypatch, name, new_value)
+    for mod in RABBIT_MQ_MODULES_TO_RELOAD:
+        reload(mod)
+    yield new_settings
+    # reset to original value and reload module
+    patch_env_var(monkeypatch, name, original_value)
+    for mod in RABBIT_MQ_MODULES_TO_RELOAD:
+        reload(mod)
+
+
+@pytest.fixture
+def change_rabbit_mq_port(
+    rabbitmq_docker_container: DockerContainer, monkeypatch: MonkeyPatch
+) -> Generator[config.Settings, None, None]:
+    name = "APP_RABBIT_MQ_PORT"
+    original_value = os.getenv(name)
+    new_value = str(rabbitmq_docker_container.get_exposed_port(5672))
+    # set new value, reload module and yield setting
+    new_settings = patch_env_var(monkeypatch, name, new_value)
+    for mod in RABBIT_MQ_MODULES_TO_RELOAD:
+        reload(mod)
+    yield new_settings
+    # reset to original value and reload module
+    patch_env_var(monkeypatch, name, original_value)
+    for mod in RABBIT_MQ_MODULES_TO_RELOAD:
+        reload(mod)
+
+
+@pytest.fixture
 def log_db_statements(
-        postgres_docker_container: DockerContainer, monkeypatch: MonkeyPatch
+    postgres_docker_container: DockerContainer, monkeypatch: MonkeyPatch
 ) -> Generator[config.Settings, None, None]:
     name = "APP_DB_LOG_SQL"
     original_value = os.getenv(name)
@@ -163,7 +205,7 @@ def log_db_statements(
 
 @pytest.fixture
 def disable_open_api(
-        monkeypatch: MonkeyPatch,
+    monkeypatch: MonkeyPatch,
 ) -> Generator[config.Settings, None, None]:
     name = "APP_OPEN_API_URL"
     original_value = os.getenv(name)
@@ -176,7 +218,7 @@ def disable_open_api(
 
 @pytest.fixture
 def get_session(
-        postgres_docker_container: DockerContainer, test_client: TestClient
+    postgres_docker_container: DockerContainer, test_client: TestClient
 ) -> Generator[Session, Any, None]:
     from sqlmodel import Session, create_engine
 
@@ -198,7 +240,7 @@ def get_session(
 
 @pytest_asyncio.fixture
 async def get_async_session(
-        postgres_docker_container: DockerContainer, test_client: TestClient
+    postgres_docker_container: DockerContainer, test_client: TestClient
 ) -> AsyncGenerator[AsyncSession, Any]:
     from sqlalchemy.ext.asyncio import create_async_engine
     from sqlmodel.ext.asyncio.session import AsyncSession
@@ -223,7 +265,7 @@ async def get_async_session(
 
 @pytest_asyncio.fixture
 async def get_database(
-        postgres_docker_container: DockerContainer, test_client: TestClient
+    postgres_docker_container: DockerContainer, test_client: TestClient
 ) -> AsyncGenerator[Database, None]:
     db_ip: str = postgres_docker_container.get_container_host_ip()
     db_port: str = str(postgres_docker_container.get_exposed_port(5432))
@@ -241,7 +283,7 @@ async def get_database(
 
 
 def patch_env_var(
-        monkeypatch: MonkeyPatch, name: str, value: str | None
+    monkeypatch: MonkeyPatch, name: str, value: str | None
 ) -> config.Settings:
     if value is None:
         monkeypatch.delenv(name)

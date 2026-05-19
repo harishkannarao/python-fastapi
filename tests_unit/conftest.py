@@ -24,6 +24,7 @@ def test_client(
     monkeypatch: MonkeyPatch,
     disable_db_migrations: config.Settings,
     disable_db_connection: config.Settings,
+    disable_rabbitmq: config.Settings,
     mock_get_database: MagicMock,
     mock_session: MagicMock,
     mock_async_session: MagicMock,
@@ -79,6 +80,17 @@ def disable_db_connection(monkeypatch) -> Generator[config.Settings, None, None]
     name = "APP_DB_ENABLED"
     original_value = os.getenv(name)
     new_value = "False"
+    # set new value, reload module and yield setting
+    yield patch_env_var(monkeypatch, name, new_value)
+    # reset to original value and reload module
+    patch_env_var(monkeypatch, name, original_value)
+
+
+@pytest.fixture
+def disable_rabbitmq(monkeypatch) -> Generator[config.Settings, None, None]:
+    name = "APP_RABBIT_MQ_PASSIVE"
+    original_value = os.getenv(name)
+    new_value = "True"
     # set new value, reload module and yield setting
     yield patch_env_var(monkeypatch, name, new_value)
     # reset to original value and reload module
