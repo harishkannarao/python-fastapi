@@ -1280,7 +1280,7 @@ dev = [
     { name = "pytest-mock" },
     { name = "ruff" },
     { name = "tenacity" },
-    { name = "testcontainers", extras = ["postgresql"] },
+    { name = "testcontainers" },
 ]
 
 [[package]]
