@@ -217,6 +217,19 @@ def disable_open_api(
 
 
 @pytest.fixture
+def enable_test_routers(
+    monkeypatch: MonkeyPatch,
+) -> Generator[config.Settings, None, None]:
+    name = "APP_INCLUDE_TEST_ROUTERS"
+    original_value = os.getenv(name)
+    new_value = "True"
+    # set new value, reload module and yield setting
+    yield patch_env_var(monkeypatch, name, new_value)
+    # reset to original value and reload module
+    patch_env_var(monkeypatch, name, original_value)
+
+
+@pytest.fixture
 def get_session(
     postgres_docker_container: DockerContainer, test_client: TestClient
 ) -> Generator[Session, Any, None]:

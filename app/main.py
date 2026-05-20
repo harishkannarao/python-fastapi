@@ -48,6 +48,17 @@ context.include_router(external_faq_router)
 context.include_router(sample_form_router)
 context.mount("/static", StaticFiles(directory="app/static"), name="static")
 
+if settings.app_include_test_routers:
+    try:
+        from tests_integration.routers.support_router import router as support_router
+
+        context.include_router(support_router)
+    except ImportError as ie:
+        support_router = None
+        logger = structlog.get_logger()
+        logger.warning(f"ImportError!: {repr(ie)}")
+        pass
+
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
