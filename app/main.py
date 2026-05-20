@@ -33,6 +33,7 @@ from app.routers.sample_form import router as sample_form_router
 
 # Initialize logging at application startup
 setup_logging(json_logs=settings.app_json_logs, db_logs=settings.app_db_log_sql)
+logger = structlog.get_logger()
 
 context = FastAPI(openapi_url=settings.app_open_api_url)
 
@@ -55,7 +56,6 @@ if settings.app_include_test_routers:
         context.include_router(support_router)
     except ImportError as ie:
         support_router = None
-        logger = structlog.get_logger()
         logger.warning(f"ImportError!: {repr(ie)}")
         pass
 
@@ -90,7 +90,6 @@ app.add_middleware(
 @app.exception_handler(Exception)
 @context.exception_handler(Exception)
 async def universal_exception_handler(request: Request, exc: Exception):
-    logger = structlog.get_logger()
     logger.error(
         f"Unexpected Internal Server Error!: {repr(exc)}",
         **(create_request_context(request)),
@@ -103,7 +102,6 @@ async def universal_exception_handler(request: Request, exc: Exception):
 @app.exception_handler(StarletteHTTPException)
 @context.exception_handler(StarletteHTTPException)
 async def custom_http_exception_handler(request, exc: StarletteHTTPException):
-    logger = structlog.get_logger()
     logger.warning(f"An HTTP error!: {repr(exc)}", **(create_request_context(request)))
     return await http_exception_handler(request, exc)
 
@@ -111,7 +109,6 @@ async def custom_http_exception_handler(request, exc: StarletteHTTPException):
 @app.exception_handler(RequestValidationError)
 @context.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc: RequestValidationError):
-    logger = structlog.get_logger()
     logger.warning(
         f"The client sent invalid data!: {exc}", **(create_request_context(request))
     )
@@ -120,14 +117,12 @@ async def validation_exception_handler(request, exc: RequestValidationError):
 
 @app.get("/")
 async def root():
-    logger = structlog.get_logger()
     logger.info("Root request received")
     return {"message": "Hello Bigger Applications!"}
 
 
 @context.get("/")
 async def context_root():
-    logger = structlog.get_logger()
     logger.info("Context Root request received")
     return {"message": "Hello Sub Application!"}
 
