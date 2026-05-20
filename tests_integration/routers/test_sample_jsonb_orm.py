@@ -95,14 +95,17 @@ def test_sample_jsonb_orm_create_with_duplicate_json_id_returns_409(
             )
         )
     ).is_length(1)
-    assert_that(
-        list(
-            filter(
-                lambda entry: str(entry["event"]).startswith("An HTTP error!"),
-                captured_logs,
-            )
+    http_error_logs = list(
+        filter(
+            lambda entry: str(entry["event"]).startswith("An HTTP error!"),
+            captured_logs,
         )
-    ).is_length(1)
+    )
+    assert_that(http_error_logs).is_length(1)
+    assert_that(http_error_logs[0]["request_method"]).is_equal_to("PUT")
+    assert_that(http_error_logs[0]["request_path"]).is_equal_to(
+        "/context/samples/jsonb/orm"
+    )
 
 
 @pytest.mark.parametrize(
