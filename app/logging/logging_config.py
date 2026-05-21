@@ -2,12 +2,21 @@ import logging
 import sys
 
 import structlog
+from structlog.processors import CallsiteParameterAdder, CallsiteParameter
 from structlog.contextvars import merge_contextvars
 from structlog.stdlib import LoggerFactory
 
 
 def setup_logging(json_logs: bool = False, db_logs: bool = False):
     shared_processors = [
+        CallsiteParameterAdder(
+            {
+                CallsiteParameter.PATHNAME,  # e.g., "/app/app.py"
+                CallsiteParameter.FILENAME,  # e.g., "app.py"
+                CallsiteParameter.FUNC_NAME,  # e.g., "my_function"
+                CallsiteParameter.LINENO,  # e.g., 42
+            }
+        ),
         structlog.processors.TimeStamper(fmt="iso", utc=True),
         structlog.processors.add_log_level,
         merge_contextvars,
