@@ -66,7 +66,7 @@ async def lifespan(_app: FastAPI):
         apply_db_migrations()
     if settings.app_db_enabled:
         await database.connect()
-    if not settings.app_rabbit_mq_passive:
+    if settings.app_rabbit_mq_connect and not settings.app_rabbit_mq_passive:
         await configure_rabbitmq()
     yield
     if engine is not None:

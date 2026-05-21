@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     app_rabbit_mq_durable: bool = False
     # passive True will create queue, exchanges and bindings during application start up
     app_rabbit_mq_passive: bool = False
+    app_rabbit_mq_connect: bool = True
     app_rabbit_mq_max_retries: int = 1
     # rabbit mq broker settings end
 
