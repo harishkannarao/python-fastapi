@@ -2,23 +2,13 @@ import aio_pika
 import structlog
 
 from app.config import settings
+from app.rabbit_mq_setup.rabbit_mq_client import get_channel
 
 
 async def configure_rabbitmq():
     logger = structlog.get_logger()
 
-    rabbit_mq_url = (
-        f"amqp://{settings.app_rabbit_mq_username}:{settings.app_rabbit_mq_password}"
-        f"@{settings.app_rabbit_mq_host}:{settings.app_rabbit_mq_port}/{settings.app_rabbit_mq_vhost}"
-    )
-
-    logger.info(
-        f" Connecting to RabbitMQ at {settings.app_rabbit_mq_host}:{settings.app_rabbit_mq_port}..."
-    )
-    connection = await aio_pika.connect_robust(rabbit_mq_url)
-
-    async with connection:
-        channel = await connection.channel()
+    async with await get_channel() as channel:
         logger.info("Configuring queues and exchanges")
 
         inbound_queue = await channel.declare_queue(

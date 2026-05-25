@@ -16,6 +16,10 @@ from fastapi import Request
 from app.config import settings
 from app.db.database_config import database, engine
 from app.db_schema_migrations.yoyo_migration import apply_db_migrations
+from app.rabbit_mq_setup.rabbit_mq_client import (
+    open_rabbit_connection,
+    close_rabbit_connection,
+)
 from app.rabbit_mq_setup.rabbit_mq_initialisation import configure_rabbitmq
 from app.logging.logging_config import setup_logging
 from app.middleware.process_time import ProcessTimeMiddleware
@@ -66,9 +70,13 @@ async def lifespan(_app: FastAPI):
         apply_db_migrations()
     if settings.app_db_enabled:
         await database.connect()
-    if settings.app_rabbit_mq_connect and not settings.app_rabbit_mq_passive:
-        await configure_rabbitmq()
+    if settings.app_rabbit_mq_connect:
+        await open_rabbit_connection()
+        if not settings.app_rabbit_mq_passive:
+            await configure_rabbitmq()
     yield
+    if settings.app_rabbit_mq_connect:
+        await close_rabbit_connection()
     if engine is not None:
         engine.dispose()
     if settings.app_db_enabled:
