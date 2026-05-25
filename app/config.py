@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     app_rabbit_inbound_exchange: str = "in-bound-ex"
     app_rabbit_inbound_routing_key: str = "in-bound-rk"
 
+    app_rabbit_inbound_retry_queue: str = "in-bound-retry-queue"
+    app_rabbit_inbound_retry_exchange: str = "in-bound-retry-ex"
+    app_rabbit_inbound_retry_routing_key: str = "in-bound-retry-rk"
+
     app_rabbit_outbound_queue: str = "out-bound-queue"
     app_rabbit_outbound_exchange: str = "out-bound-ex"
     app_rabbit_outbound_routing_key: str = "out-bound-rk"
