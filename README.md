@@ -40,7 +40,21 @@ Docker dependencies needs to be started using docker compose before running the 
 ##### Stop docker services
 
     docker compose -f docker-compose.yml down -v
+
+##### Postgres DB Connection Details
+
+    host: localhost
+    port: 5432
+    database: myuser
+    username: myuser
+    password: superpassword
+
+##### Rabbit MQ Connection Details
     
+    broker url: amqp://guest:guest@localhost:5672/
+    management url: http://localhost:15672/
+    username: guest
+    password: guest
 
 ### Run in development mode
 
