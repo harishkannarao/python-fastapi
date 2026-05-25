@@ -2,7 +2,7 @@ import aio_pika
 import structlog
 
 from app.config import settings
-from app.rabbit_mq_setup.rabbit_mq_client import get_channel
+from app.rabbit_mq.rabbit_mq_client import get_channel
 
 
 async def configure_rabbitmq():

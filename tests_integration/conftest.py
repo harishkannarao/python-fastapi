@@ -19,8 +19,8 @@ from testcontainers.core.container import DockerContainer
 import app.config as config
 import app.db.database_config as database_config
 import app.db.database_dependencies as database_dependencies
-import app.rabbit_mq_setup.rabbit_mq_client as rabbit_mq_client
-import app.rabbit_mq_setup.rabbit_mq_initialisation as rabbit_mq_initialisation
+import app.rabbit_mq.rabbit_mq_client as rabbit_mq_client
+import app.rabbit_mq.rabbit_mq_initialisation as rabbit_mq_initialisation
 import app.main as main
 
 DB_MODULES_TO_RELOAD = [
