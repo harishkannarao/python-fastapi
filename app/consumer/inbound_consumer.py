@@ -1,8 +1,12 @@
 import asyncio
+import json
 from _asyncio import Task
 
 import structlog
 from aio_pika.abc import AbstractIncomingMessage
+from fastapi.encoders import jsonable_encoder
+
+from app.model.response.sample import Sample
 from app.rabbit_mq.rabbit_mq_client import get_connection
 from app.config import settings
 
@@ -12,8 +16,13 @@ async def process_inbound_message_task(message: AbstractIncomingMessage):
     async with message.process():  # Automatically ACKs if no exception occurs
         payload_string: str = message.body.decode()
         logger.info(
-            f"Processed inbound message {payload_string}", payload=payload_string
+            f"Received inbound message {payload_string}", payload=payload_string
         )
+        samples = [Sample(**item) for item in json.loads(payload_string)]
+        logger.info(
+            f"Processed inbound message {payload_string}", samples=jsonable_encoder(samples)
+        )
+
 
 
 async def start_inbound_consumer() -> Task[str]:

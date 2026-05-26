@@ -8,6 +8,7 @@ import aio_pika
 import pytest
 import structlog
 from assertpy import assert_that
+from deepdiff import DeepDiff
 from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 from tenacity import Retrying, stop_after_delay, wait_fixed
@@ -41,9 +42,9 @@ async def test_inbound_consumer_handles_message_successfully(
         updated_datetime=datetime.datetime.now(datetime.UTC),
         version=1,
     )
-    samples: list[Sample] = [sample1, sample2]
+    input_samples: list[Sample] = [sample1, sample2]
 
-    await publish_to_inbound(samples)
+    await publish_to_inbound(input_samples)
 
     for attempt in Retrying(
         stop=stop_after_delay(5), wait=wait_fixed(0.5), reraise=True
@@ -59,6 +60,14 @@ async def test_inbound_consumer_handles_message_successfully(
                 )
             )
             assert_that(inbound_consumer_logs).is_length(1)
+            consumed_samples: list[dict[str, Any]] = inbound_consumer_logs[0]["samples"]
+            assert_that(
+                DeepDiff(
+                    consumed_samples,
+                    jsonable_encoder(input_samples),
+                    ignore_order=True,
+                )
+            ).is_empty()
 
 
 async def publish_to_inbound(samples: list[Sample]):
