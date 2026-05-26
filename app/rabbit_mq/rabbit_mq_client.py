@@ -2,7 +2,7 @@ from typing import Optional
 
 import aio_pika
 import structlog
-from aio_pika.abc import AbstractRobustConnection, AbstractChannel
+from aio_pika.abc import AbstractRobustConnection
 
 from app.config import settings
 
@@ -65,9 +65,3 @@ def get_connection() -> AbstractRobustConnection:
             "Ensure 'set_connection' was called during app startup."
         )
     return _connection
-
-
-async def get_channel() -> AbstractChannel:
-    """Utility helper to quickly grab an isolated channel off the global connection."""
-    conn = get_connection()
-    return await conn.channel()

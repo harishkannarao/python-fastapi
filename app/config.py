@@ -37,6 +37,7 @@ class Settings(BaseSettings):
 
     # rabbit mq queue/exchange settings end
     app_rabbit_inbound_queue: str = "in-bound-queue"
+    app_rabbit_inbound_concurrency: int = 10
     app_rabbit_inbound_exchange: str = "in-bound-ex"
     app_rabbit_inbound_routing_key: str = "in-bound-rk"
 

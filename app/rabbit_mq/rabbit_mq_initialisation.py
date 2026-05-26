@@ -2,13 +2,13 @@ import aio_pika
 import structlog
 
 from app.config import settings
-from app.rabbit_mq.rabbit_mq_client import get_channel
+from app.rabbit_mq.rabbit_mq_client import get_connection
 
 
 async def configure_rabbitmq():
     logger = structlog.get_logger()
 
-    async with await get_channel() as channel:
+    async with await get_connection().channel() as channel:
         logger.info("Configuring queues and exchanges")
 
         inbound_queue = await channel.declare_queue(

@@ -1,3 +1,6 @@
+import asyncio
+from asyncio import Task
+
 import structlog
 import uvicorn
 from fastapi import FastAPI
@@ -34,6 +37,7 @@ from app.routers.customer import router as customer_router
 from app.routers.dependency import router as dependency_router
 from app.routers.external_faq import router as external_faq_router
 from app.routers.sample_form import router as sample_form_router
+from app.consumer.inbound_consumer import start_inbound_consumer
 
 # Initialize logging at application startup
 setup_logging(json_logs=settings.app_json_logs, db_logs=settings.app_db_log_sql)
@@ -70,12 +74,21 @@ async def lifespan(_app: FastAPI):
         apply_db_migrations()
     if settings.app_db_enabled:
         await database.connect()
+    consumer_tasks: list[Task[str]] = []
     if settings.app_rabbit_mq_connect:
         await open_rabbit_connection()
         if not settings.app_rabbit_mq_passive:
             await configure_rabbitmq()
+        consumer_tasks.append(await start_inbound_consumer())
     yield
     if settings.app_rabbit_mq_connect:
+        # Cancel any long-running active consumer loop tasks
+        for task in consumer_tasks:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
         await close_rabbit_connection()
     if engine is not None:
         engine.dispose()
