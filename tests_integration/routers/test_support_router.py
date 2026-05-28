@@ -31,6 +31,7 @@ def test_support_get_returns_success_when_enabled(
 
 
 def test_support_get_returns_404_as_default(
+    disable_test_routers: Settings,
     test_client: TestClient,
 ):
     get_response: Response = test_client.get(ENDPOINT)

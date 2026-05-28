@@ -20,9 +20,9 @@ async def process_inbound_message_task(message: AbstractIncomingMessage):
         )
         samples = [Sample(**item) for item in json.loads(payload_string)]
         logger.info(
-            f"Processed inbound message {payload_string}", samples=jsonable_encoder(samples)
+            f"Processed inbound message {payload_string}",
+            samples=jsonable_encoder(samples),
         )
-
 
 
 async def start_inbound_consumer() -> Task[str]:

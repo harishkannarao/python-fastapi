@@ -11,6 +11,7 @@ from app.config import settings
 
 async def publish_to_inbound(samples: list[Sample]):
     logger = structlog.get_logger()
+    logger.info("Publishing to inbound queue ", samples=samples)
     async with get_connection().channel() as channel:
         exchange = await channel.get_exchange(settings.app_rabbit_inbound_exchange)
         payload_string: str = json.dumps(jsonable_encoder(samples))

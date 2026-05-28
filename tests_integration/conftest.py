@@ -19,9 +19,9 @@ from testcontainers.core.container import DockerContainer
 import app.config as config
 import app.db.database_config as database_config
 import app.db.database_dependencies as database_dependencies
+import app.main as main
 import app.rabbit_mq.rabbit_mq_client as rabbit_mq_client
 import app.rabbit_mq.rabbit_mq_initialisation as rabbit_mq_initialisation
-import app.main as main
 
 DB_MODULES_TO_RELOAD = [
     database_config,
@@ -225,6 +225,19 @@ def enable_test_routers(
     name = "APP_INCLUDE_TEST_ROUTERS"
     original_value = os.getenv(name)
     new_value = "True"
+    # set new value, reload module and yield setting
+    yield patch_env_var(monkeypatch, name, new_value)
+    # reset to original value and reload module
+    patch_env_var(monkeypatch, name, original_value)
+
+
+@pytest.fixture
+def disable_test_routers(
+    monkeypatch: MonkeyPatch,
+) -> Generator[config.Settings, None, None]:
+    name = "APP_INCLUDE_TEST_ROUTERS"
+    original_value = os.getenv(name)
+    new_value = "False"
     # set new value, reload module and yield setting
     yield patch_env_var(monkeypatch, name, new_value)
     # reset to original value and reload module

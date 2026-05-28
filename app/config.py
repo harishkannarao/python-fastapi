@@ -53,7 +53,7 @@ class Settings(BaseSettings):
     app_external_faq_api_base_url: str = "http://localhost:4010"
     app_file_upload_path: str = tempfile.gettempdir()
 
-    app_include_test_routers: bool = False
+    app_include_test_routers: bool = True
 
 
 settings = Settings()
