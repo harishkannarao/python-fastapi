@@ -25,8 +25,10 @@ async def get_handler() -> Resp:
     logger.info("Support Request Success!!", **jsonable_encoder(resp))
     return resp
 
+
 MAX_CONCURRENT_TASKS = 10
 GLOBAL_SEMAPHORE = asyncio.Semaphore(MAX_CONCURRENT_TASKS)
+
 
 @router.get("/publish-inbound-messages", status_code=204)
 async def publish_inbound_messages_handler(
@@ -55,7 +57,6 @@ async def publish_inbound_messages_handler(
         finally:
             if use_throttle:
                 GLOBAL_SEMAPHORE.release()
-
 
     # 1. Create a list of coroutines based on the count
     tasks = [publish_message(i, throttle) for i in range(0, count)]
