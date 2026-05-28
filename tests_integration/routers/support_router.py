@@ -25,30 +25,40 @@ async def get_handler() -> Resp:
     logger.info("Support Request Success!!", **jsonable_encoder(resp))
     return resp
 
+MAX_CONCURRENT_TASKS = 10
+GLOBAL_SEMAPHORE = asyncio.Semaphore(MAX_CONCURRENT_TASKS)
 
 @router.get("/publish-inbound-messages", status_code=204)
 async def publish_inbound_messages_handler(
     count: int = Query(default=1, ge=1, le=10000),
+    throttle: bool = False,
 ) -> None:
     logger = structlog.get_logger()
 
-    async def publish_message(index: int) -> None:
-        logger.info(f"Publishing index {index}")
-        message: Sample = Sample(
-            id=uuid.uuid4(),
-            username=f"user-{uuid.uuid4()}",
-            bool_field=None,
-            float_field=None,
-            decimal_field=None,
-            created_datetime=datetime.datetime.now(datetime.UTC),
-            updated_datetime=datetime.datetime.now(datetime.UTC),
-            version=1,
-        )
-        await publish_to_inbound([message])
-        logger.info(f"Published index {index}")
+    async def publish_message(index: int, use_throttle: bool) -> None:
+        try:
+            if use_throttle:
+                await GLOBAL_SEMAPHORE.acquire()
+            logger.info(f"Publishing index {index}")
+            message: Sample = Sample(
+                id=uuid.uuid4(),
+                username=f"user-{uuid.uuid4()}",
+                bool_field=None,
+                float_field=None,
+                decimal_field=None,
+                created_datetime=datetime.datetime.now(datetime.UTC),
+                updated_datetime=datetime.datetime.now(datetime.UTC),
+                version=1,
+            )
+            await publish_to_inbound([message])
+            logger.info(f"Published index {index}")
+        finally:
+            if use_throttle:
+                GLOBAL_SEMAPHORE.release()
+
 
     # 1. Create a list of coroutines based on the count
-    tasks = [publish_message(i) for i in range(0, count)]
+    tasks = [publish_message(i, throttle) for i in range(0, count)]
 
     # 2. Execute them in parallel and wait for all of them to finish
     await asyncio.gather(*tasks)
