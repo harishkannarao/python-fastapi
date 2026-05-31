@@ -30,7 +30,7 @@ MAX_CONCURRENT_TASKS = 10
 GLOBAL_SEMAPHORE = asyncio.Semaphore(MAX_CONCURRENT_TASKS)
 
 
-@router.get("/publish-inbound-messages", status_code=204)
+@router.get("/publish-bulk-inbound-messages", status_code=204)
 async def publish_inbound_messages_handler(
     count: int = Query(default=1, ge=1, le=10000),
     throttle: bool = False,
