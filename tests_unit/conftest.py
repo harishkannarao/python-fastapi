@@ -88,9 +88,9 @@ def disable_db_connection(monkeypatch) -> Generator[config.Settings, None, None]
 
 @pytest.fixture
 def disable_rabbitmq(monkeypatch) -> Generator[config.Settings, None, None]:
-    name = "APP_RABBIT_MQ_PASSIVE"
+    name = "APP_RABBIT_MQ_CONNECT"
     original_value = os.getenv(name)
-    new_value = "True"
+    new_value = "False"
     # set new value, reload module and yield setting
     yield patch_env_var(monkeypatch, name, new_value)
     # reset to original value and reload module
