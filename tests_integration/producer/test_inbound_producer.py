@@ -66,6 +66,7 @@ def test_publish_inbound_message(
             assert_that(inbound_consumer_logs).is_length(1)
             headers: HeadersType = inbound_consumer_logs[0]["headers"]
             assert_that(headers.get("test")).is_equal_to("value")
+            assert_that(headers.get("datetime")).is_instance_of(datetime)
             assert_that(headers.get("datetime")).is_between(
                 datetime.now(UTC) - timedelta(seconds=5),
                 datetime.now(UTC) + timedelta(seconds=5),
