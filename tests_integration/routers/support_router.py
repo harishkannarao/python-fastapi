@@ -1,8 +1,9 @@
 import asyncio
-import datetime
 import uuid
+from datetime import datetime, UTC
 
 import structlog
+from aio_pika.abc import HeadersType
 from fastapi import APIRouter, Query
 from fastapi.encoders import jsonable_encoder
 from pydantic.dataclasses import dataclass
@@ -29,7 +30,8 @@ async def get_handler() -> Resp:
 @router.post("/publish-inbound-messages", status_code=204)
 async def publish_inbound_messages_handler(messages: list[Sample]) -> None:
     logger = structlog.get_logger()
-    await publish_to_inbound(messages)
+    headers: HeadersType = {"test": "value", "datetime": datetime.now(UTC)}
+    await publish_to_inbound(messages, headers=headers)
     logger.info(f"Published {len(messages)} message(s) to inbound queue")
     return
 
@@ -56,8 +58,8 @@ async def publish_bulk_inbound_messages_handler(
                 bool_field=None,
                 float_field=None,
                 decimal_field=None,
-                created_datetime=datetime.datetime.now(datetime.UTC),
-                updated_datetime=datetime.datetime.now(datetime.UTC),
+                created_datetime=datetime.now(UTC),
+                updated_datetime=datetime.now(UTC),
                 version=1,
             )
             await publish_to_inbound([message])

@@ -3,7 +3,7 @@ import json
 from _asyncio import Task
 
 import structlog
-from aio_pika.abc import AbstractIncomingMessage
+from aio_pika.abc import AbstractIncomingMessage, HeadersType
 from fastapi.encoders import jsonable_encoder
 
 from app.model.response.sample import Sample
@@ -15,12 +15,16 @@ async def process_inbound_message_task(message: AbstractIncomingMessage):
     logger = structlog.get_logger()
     async with message.process():  # Automatically ACKs if no exception occurs
         payload_string: str = message.body.decode()
+        headers: HeadersType = message.headers
         logger.info(
-            f"Received inbound message {payload_string}", payload=payload_string
+            f"Received inbound message {payload_string}",
+            payload=payload_string,
+            headers=headers,
         )
         samples = [Sample(**item) for item in json.loads(payload_string)]
         logger.info(
             f"Processed inbound message {payload_string}",
+            headers=headers,
             samples=jsonable_encoder(samples),
         )
 

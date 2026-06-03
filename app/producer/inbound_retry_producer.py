@@ -2,6 +2,7 @@ import json
 
 import aio_pika
 import structlog
+from aio_pika.abc import HeadersType
 from fastapi.encoders import jsonable_encoder
 
 from app.rabbit_mq.rabbit_mq_client import get_connection
@@ -9,7 +10,7 @@ from app.model.response.sample import Sample
 from app.config import settings
 
 
-async def publish_to_inbound_retry(samples: list[Sample]):
+async def publish_to_inbound_retry(samples: list[Sample], headers: HeadersType = None):
     logger = structlog.get_logger()
     logger.info("Publishing to inbound retry queue ", samples=samples)
     async with get_connection().channel() as channel:
@@ -19,6 +20,7 @@ async def publish_to_inbound_retry(samples: list[Sample]):
         payload_string: str = json.dumps(jsonable_encoder(samples))
         message = aio_pika.Message(
             body=payload_string.encode(),
+            headers=headers,
             delivery_mode=aio_pika.DeliveryMode.PERSISTENT,  # Survives broker restart
         )
         await exchange.publish(

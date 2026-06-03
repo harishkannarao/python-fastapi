@@ -1,9 +1,10 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, UTC, timedelta
 from datetime import timezone
 from decimal import Decimal
 from typing import MutableMapping, Any
 
+from aio_pika.abc import HeadersType
 from assertpy import assert_that
 from deepdiff import DeepDiff
 from fastapi.encoders import jsonable_encoder
@@ -63,6 +64,12 @@ def test_publish_inbound_message(
                 )
             )
             assert_that(inbound_consumer_logs).is_length(1)
+            headers: HeadersType = inbound_consumer_logs[0]["headers"]
+            assert_that(headers.get("test")).is_equal_to("value")
+            assert_that(headers.get("datetime")).is_between(
+                datetime.now(UTC) - timedelta(seconds=5),
+                datetime.now(UTC) + timedelta(seconds=5),
+            )
             consumed_samples: list[dict[str, Any]] = inbound_consumer_logs[0]["samples"]
             assert_that(
                 DeepDiff(
