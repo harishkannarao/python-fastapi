@@ -21,7 +21,7 @@ async def process_inbound_message_task(message: AbstractIncomingMessage):
     async with message.process():  # Automatically ACKs if no exception occurs
         try:
             payload_string: str = message.body.decode()
-            headers: HeadersType = message.headers
+            headers = dict(message.headers) if message.headers else {}
             count: int = headers.get("count", 1)
             message_id: str = headers.get("message_id", str(uuid.uuid4()))
             message_context: dict[str, Any] = {
@@ -45,7 +45,10 @@ async def process_inbound_message_task(message: AbstractIncomingMessage):
         except Exception as e:
             logger.error(f"Unexpected Exception!: {repr(e)}")
             headers.update({"count": count + 1, "message_id": message_id})
-            await publish_to_inbound_retry(samples=samples, headers=headers)
+            if samples is None:
+               logger.error(f"Unable to parse raw payload {payload_string}")
+            else:
+                await publish_to_inbound_retry(samples=samples, headers=headers)
         finally:
             structlog.contextvars.clear_contextvars()
 
