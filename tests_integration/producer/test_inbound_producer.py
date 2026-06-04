@@ -61,30 +61,30 @@ def test_publish_inbound_message(
     ):
         with attempt:
             assert_that(len(captured_logs)).is_greater_than(0)
-            inbound_consumer_logs = list(
+            outbound_consumer_logs = list(
                 filter(
                     lambda entry: str(entry["event"]).startswith(
-                        "Processed inbound message"
+                        "Processed outbound message"
                     ),
                     captured_logs,
                 )
             )
-            assert_that(inbound_consumer_logs).is_length(1)
-            received_headers: HeadersType = inbound_consumer_logs[0]["headers"]
-            assert_that(received_headers.get("test")).is_equal_to(headers.get("test"))
-            assert_that(received_headers.get("intValue")).is_equal_to(
+            assert_that(outbound_consumer_logs).is_length(1)
+            outbound_headers: HeadersType = outbound_consumer_logs[0]["headers"]
+            assert_that(outbound_headers.get("test")).is_equal_to(headers.get("test"))
+            assert_that(outbound_headers.get("intValue")).is_equal_to(
                 headers.get("intValue")
             )
             assert_that(
-                datetime.fromisoformat(received_headers.get("datetime"))
+                datetime.fromisoformat(outbound_headers.get("datetime"))
             ).is_between(
                 datetime.now(UTC) - timedelta(seconds=5),
                 datetime.now(UTC) + timedelta(seconds=5),
             )
-            consumed_samples: list[dict[str, Any]] = inbound_consumer_logs[0]["samples"]
+            outbound_samples: list[dict[str, Any]] = outbound_consumer_logs[0]["samples"]
             assert_that(
                 DeepDiff(
-                    consumed_samples,
+                    outbound_samples,
                     jsonable_encoder(samples),
                     ignore_order=True,
                 )

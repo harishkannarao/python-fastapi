@@ -10,6 +10,8 @@ from app.model.response.sample import Sample
 from app.rabbit_mq.rabbit_mq_client import get_connection
 from app.config import settings
 
+from app.producer.outbound_producer import publish_to_outbound
+
 
 async def process_inbound_message_task(message: AbstractIncomingMessage):
     logger = structlog.get_logger()
@@ -22,6 +24,7 @@ async def process_inbound_message_task(message: AbstractIncomingMessage):
             headers=headers,
         )
         samples = [Sample(**item) for item in json.loads(payload_string)]
+        await publish_to_outbound(samples=samples, headers=headers)
         logger.info(
             f"Processed inbound message {payload_string}",
             headers=headers,
