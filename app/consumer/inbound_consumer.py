@@ -9,7 +9,6 @@ from aio_pika.abc import AbstractIncomingMessage
 from fastapi.encoders import jsonable_encoder
 
 from app.config import settings
-from app.logging.logging_config import setup_logging
 from app.model.response.sample import Sample
 from app.producer.inbound_retry_producer import publish_to_inbound_retry
 from app.producer.outbound_producer import publish_to_outbound
@@ -17,8 +16,6 @@ from app.rabbit_mq.rabbit_mq_client import get_connection
 
 
 async def process_inbound_message_task(message: AbstractIncomingMessage):
-    if not settings.app_include_test_components:
-        setup_logging(json_logs=settings.app_json_logs, db_logs=settings.app_db_log_sql)
     logger = structlog.get_logger()
     async with message.process():  # Automatically ACKs if no exception occurs
         try:
