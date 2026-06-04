@@ -3,7 +3,6 @@ import uuid
 from datetime import datetime, UTC
 
 import structlog
-from aio_pika.abc import HeadersType
 from fastapi import APIRouter, Query
 from fastapi.encoders import jsonable_encoder
 from pydantic.dataclasses import dataclass
@@ -42,8 +41,8 @@ GLOBAL_SEMAPHORE = asyncio.Semaphore(MAX_CONCURRENT_TASKS)
 
 @router.get("/publish-bulk-inbound-messages", status_code=204)
 async def publish_bulk_inbound_messages_handler(
-        count: int = Query(default=1, ge=1, le=10000),
-        throttle: bool = False,
+    count: int = Query(default=1, ge=1, le=10000),
+    throttle: bool = False,
 ) -> None:
     logger = structlog.get_logger()
 

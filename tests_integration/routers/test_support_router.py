@@ -11,7 +11,7 @@ ENDPOINT = "/context/test-support/get"
 
 
 def test_support_get_returns_success_when_enabled(
-    enable_test_routers: Settings,
+    enable_test_components: Settings,
     test_client: TestClient,
     captured_logs: list[MutableMapping[str, Any]],
 ):
@@ -31,7 +31,7 @@ def test_support_get_returns_success_when_enabled(
 
 
 def test_support_get_returns_404_as_default(
-    disable_test_routers: Settings,
+    disable_test_components: Settings,
     test_client: TestClient,
 ):
     get_response: Response = test_client.get(ENDPOINT)

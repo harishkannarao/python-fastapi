@@ -33,11 +33,11 @@ class Settings(BaseSettings):
     app_rabbit_mq_passive: bool = False
     app_rabbit_mq_connect: bool = True
     app_rabbit_mq_max_retries: int = 1
+    app_rabbit_consumer_concurrency: int = 10
     # rabbit mq broker settings end
 
     # rabbit mq queue/exchange settings end
     app_rabbit_inbound_queue: str = "in-bound-queue"
-    app_rabbit_inbound_concurrency: int = 10
     app_rabbit_inbound_exchange: str = "in-bound-ex"
     app_rabbit_inbound_routing_key: str = "in-bound-rk"
 
@@ -53,7 +53,7 @@ class Settings(BaseSettings):
     app_external_faq_api_base_url: str = "http://localhost:4010"
     app_file_upload_path: str = tempfile.gettempdir()
 
-    app_include_test_routers: bool = True
+    app_include_test_components: bool = True
 
 
 settings = Settings()

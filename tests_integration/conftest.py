@@ -219,10 +219,10 @@ def disable_open_api(
 
 
 @pytest.fixture
-def enable_test_routers(
+def enable_test_components(
     monkeypatch: MonkeyPatch,
 ) -> Generator[config.Settings, None, None]:
-    name = "APP_INCLUDE_TEST_ROUTERS"
+    name = "APP_INCLUDE_TEST_COMPONENTS"
     original_value = os.getenv(name)
     new_value = "True"
     # set new value, reload module and yield setting
@@ -232,10 +232,10 @@ def enable_test_routers(
 
 
 @pytest.fixture
-def disable_test_routers(
+def disable_test_components(
     monkeypatch: MonkeyPatch,
 ) -> Generator[config.Settings, None, None]:
-    name = "APP_INCLUDE_TEST_ROUTERS"
+    name = "APP_INCLUDE_TEST_COMPONENTS"
     original_value = os.getenv(name)
     new_value = "False"
     # set new value, reload module and yield setting

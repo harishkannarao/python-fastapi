@@ -38,6 +38,7 @@ from app.routers.dependency import router as dependency_router
 from app.routers.external_faq import router as external_faq_router
 from app.routers.sample_form import router as sample_form_router
 from app.consumer.inbound_consumer import start_inbound_consumer
+from app.consumer.retry_consumer import start_retry_consumer
 
 # Initialize logging at application startup
 setup_logging(json_logs=settings.app_json_logs, db_logs=settings.app_db_log_sql)
@@ -57,7 +58,7 @@ context.include_router(external_faq_router)
 context.include_router(sample_form_router)
 context.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-if settings.app_include_test_routers:
+if settings.app_include_test_components:
     try:
         from tests_integration.support.support_router import router as support_router
 
@@ -80,6 +81,7 @@ async def lifespan(_app: FastAPI):
         if not settings.app_rabbit_mq_passive:
             await configure_rabbitmq()
         consumer_tasks.append(await start_inbound_consumer())
+        consumer_tasks.append(await start_retry_consumer())
     yield
     if settings.app_rabbit_mq_connect:
         # Cancel any long-running active consumer loop tasks

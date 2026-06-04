@@ -20,7 +20,7 @@ PUBLISH_BULK_INBOUND_ENDPOINT = "/context/test-support/publish-bulk-inbound-mess
 
 
 def test_publish_inbound_message(
-    enable_test_routers: Settings,
+    enable_test_components: Settings,
     test_client: TestClient,
     captured_logs: list[MutableMapping[str, Any]],
 ):
@@ -45,11 +45,12 @@ def test_publish_inbound_message(
         version=1,
     )
     samples: list[Sample] = [sample1, sample2]
-    headers: dict[str, Any] = {"test": "value", "intValue": 2, "datetime": datetime.now(UTC).isoformat()}
-    message: InboundMessage = InboundMessage(
-        samples=samples,
-        headers=headers
-    )
+    headers: dict[str, Any] = {
+        "test": "value",
+        "intValue": 2,
+        "datetime": datetime.now(UTC).isoformat(),
+    }
+    message: InboundMessage = InboundMessage(samples=samples, headers=headers)
     publish_response: Response = test_client.post(
         PUBLISH_INBOUND_ENDPOINT, json=jsonable_encoder(message)
     )
@@ -71,8 +72,12 @@ def test_publish_inbound_message(
             assert_that(inbound_consumer_logs).is_length(1)
             received_headers: HeadersType = inbound_consumer_logs[0]["headers"]
             assert_that(received_headers.get("test")).is_equal_to(headers.get("test"))
-            assert_that(received_headers.get("intValue")).is_equal_to(headers.get("intValue"))
-            assert_that(datetime.fromisoformat(received_headers.get("datetime"))).is_between(
+            assert_that(received_headers.get("intValue")).is_equal_to(
+                headers.get("intValue")
+            )
+            assert_that(
+                datetime.fromisoformat(received_headers.get("datetime"))
+            ).is_between(
                 datetime.now(UTC) - timedelta(seconds=5),
                 datetime.now(UTC) + timedelta(seconds=5),
             )
@@ -87,7 +92,7 @@ def test_publish_inbound_message(
 
 
 def test_publish_bulk_inbound_message(
-    enable_test_routers: Settings,
+    enable_test_components: Settings,
     test_client: TestClient,
     captured_logs: list[MutableMapping[str, Any]],
 ):
