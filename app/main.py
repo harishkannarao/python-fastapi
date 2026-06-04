@@ -63,9 +63,9 @@ if settings.app_include_test_components:
         from tests_integration.support.support_router import router as support_router
 
         context.include_router(support_router)
-    except ImportError as ie:
+    except ImportError as router_import_error:
         support_router = None
-        logger.warning(f"ImportError!: {repr(ie)}")
+        logger.warning(f"Support Router ImportError!: {repr(router_import_error)}")
         pass
 
 
@@ -82,6 +82,17 @@ async def lifespan(_app: FastAPI):
             await configure_rabbitmq()
         consumer_tasks.append(await start_inbound_consumer())
         consumer_tasks.append(await start_retry_consumer())
+        if settings.app_include_test_components:
+            try:
+                from tests_integration.support.outbound_consumer import (
+                    start_outbound_consumer as outbound_consumer,
+                )
+
+                consumer_tasks.append(await outbound_consumer())
+            except ImportError as outbound_consumer_import_error:
+                outbound_consumer = None
+                logger.warning(f"Outbound Consumer ImportError!: {repr(outbound_consumer_import_error)}")
+                pass
     yield
     if settings.app_rabbit_mq_connect:
         # Cancel any long-running active consumer loop tasks
