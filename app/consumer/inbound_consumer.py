@@ -9,6 +9,7 @@ from aio_pika.abc import AbstractIncomingMessage
 from fastapi.encoders import jsonable_encoder
 
 from app.config import settings
+from app.logging.logging_config import setup_logging
 from app.model.response.sample import Sample
 from app.producer.inbound_retry_producer import publish_to_inbound_retry
 from app.producer.outbound_producer import publish_to_outbound
@@ -16,6 +17,8 @@ from app.rabbit_mq.rabbit_mq_client import get_connection
 
 
 async def process_inbound_message_task(message: AbstractIncomingMessage):
+    if not settings.app_include_test_components:
+        setup_logging(json_logs=settings.app_json_logs, db_logs=settings.app_db_log_sql)
     logger = structlog.get_logger()
     async with message.process():  # Automatically ACKs if no exception occurs
         try:
@@ -24,15 +27,15 @@ async def process_inbound_message_task(message: AbstractIncomingMessage):
             count: int = headers.get("count", 1)
             message_id: str = headers.get("message_id", str(uuid.uuid4()))
             message_context: dict[str, Any] = {"message_id": message_id, "count": count}
-            custom_logger = logger.bind(**message_context)
-            custom_logger.info(
+            structlog.contextvars.bind_contextvars(**message_context)
+            logger.info(
                 f"Received inbound message {payload_string}",
                 payload=payload_string,
                 headers=headers,
             )
             samples = [Sample(**item) for item in json.loads(payload_string)]
             await publish_to_outbound(samples=samples, headers=headers)
-            custom_logger.info(
+            logger.info(
                 f"Processed inbound message {payload_string}",
                 headers=headers,
                 samples=jsonable_encoder(samples),
@@ -52,6 +55,8 @@ async def process_inbound_message_task(message: AbstractIncomingMessage):
             else:
                 headers.update({"count": count + 1, "message_id": message_id})
                 await publish_to_inbound_retry(samples=samples, headers=headers)
+        finally:
+            structlog.contextvars.clear_contextvars()
 
 
 async def start_inbound_consumer() -> Task[str]:
