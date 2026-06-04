@@ -10,6 +10,7 @@ from pydantic.dataclasses import dataclass
 
 from app.model.response.sample import Sample
 from app.producer.inbound_producer import publish_to_inbound
+from tests_integration.support.model.inbound_message import InboundMessage
 
 router = APIRouter(prefix="/test-support")
 
@@ -28,11 +29,10 @@ async def get_handler() -> Resp:
 
 
 @router.post("/publish-inbound-messages", status_code=204)
-async def publish_inbound_messages_handler(messages: list[Sample]) -> None:
+async def publish_inbound_messages_handler(message: InboundMessage) -> None:
     logger = structlog.get_logger()
-    headers: HeadersType = {"test": "value", "datetime": datetime.now(UTC)}
-    await publish_to_inbound(messages, headers=headers)
-    logger.info(f"Published {len(messages)} message(s) to inbound queue")
+    await publish_to_inbound(message.samples, headers=message.headers)
+    logger.info(f"Published {len(message.samples)} message(s) to inbound queue")
     return
 
 
@@ -42,8 +42,8 @@ GLOBAL_SEMAPHORE = asyncio.Semaphore(MAX_CONCURRENT_TASKS)
 
 @router.get("/publish-bulk-inbound-messages", status_code=204)
 async def publish_bulk_inbound_messages_handler(
-    count: int = Query(default=1, ge=1, le=10000),
-    throttle: bool = False,
+        count: int = Query(default=1, ge=1, le=10000),
+        throttle: bool = False,
 ) -> None:
     logger = structlog.get_logger()
 

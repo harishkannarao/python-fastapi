@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime, UTC, timedelta
-from datetime import timezone
 from decimal import Decimal
 from typing import MutableMapping, Any
 
@@ -14,6 +13,7 @@ from tenacity import Retrying, stop_after_delay, wait_fixed
 
 from app.config import Settings
 from app.model.response.sample import Sample
+from tests_integration.support.model.inbound_message import InboundMessage
 
 PUBLISH_INBOUND_ENDPOINT = "/context/test-support/publish-inbound-messages"
 PUBLISH_BULK_INBOUND_ENDPOINT = "/context/test-support/publish-bulk-inbound-messages"
@@ -30,8 +30,8 @@ def test_publish_inbound_message(
         bool_field=True,
         float_field=2.0,
         decimal_field=Decimal("3.1"),
-        created_datetime=datetime.now(timezone.utc),
-        updated_datetime=datetime.now(timezone.utc),
+        created_datetime=datetime.now(UTC),
+        updated_datetime=datetime.now(UTC),
         version=1,
     )
     sample2: Sample = Sample(
@@ -40,11 +40,16 @@ def test_publish_inbound_message(
         bool_field=None,
         float_field=None,
         decimal_field=None,
-        created_datetime=datetime.now(timezone.utc),
-        updated_datetime=datetime.now(timezone.utc),
+        created_datetime=datetime.now(UTC),
+        updated_datetime=datetime.now(UTC),
         version=1,
     )
-    message: list[Sample] = [sample1, sample2]
+    samples: list[Sample] = [sample1, sample2]
+    headers: dict[str, Any] = {"test": "value", "intValue": 2, "datetime": datetime.now(UTC).isoformat()}
+    message: InboundMessage = InboundMessage(
+        samples=samples,
+        headers=headers
+    )
     publish_response: Response = test_client.post(
         PUBLISH_INBOUND_ENDPOINT, json=jsonable_encoder(message)
     )
@@ -64,10 +69,10 @@ def test_publish_inbound_message(
                 )
             )
             assert_that(inbound_consumer_logs).is_length(1)
-            headers: HeadersType = inbound_consumer_logs[0]["headers"]
-            assert_that(headers.get("test")).is_equal_to("value")
-            assert_that(headers.get("datetime")).is_instance_of(datetime)
-            assert_that(headers.get("datetime")).is_between(
+            received_headers: HeadersType = inbound_consumer_logs[0]["headers"]
+            assert_that(received_headers.get("test")).is_equal_to(headers.get("test"))
+            assert_that(received_headers.get("intValue")).is_equal_to(headers.get("intValue"))
+            assert_that(datetime.fromisoformat(received_headers.get("datetime"))).is_between(
                 datetime.now(UTC) - timedelta(seconds=5),
                 datetime.now(UTC) + timedelta(seconds=5),
             )
@@ -75,7 +80,7 @@ def test_publish_inbound_message(
             assert_that(
                 DeepDiff(
                     consumed_samples,
-                    jsonable_encoder(message),
+                    jsonable_encoder(samples),
                     ignore_order=True,
                 )
             ).is_empty()
