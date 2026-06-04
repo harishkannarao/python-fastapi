@@ -81,7 +81,9 @@ def test_publish_inbound_message(
                 datetime.now(UTC) - timedelta(seconds=5),
                 datetime.now(UTC) + timedelta(seconds=5),
             )
-            outbound_samples: list[dict[str, Any]] = outbound_consumer_logs[0]["samples"]
+            outbound_samples: list[dict[str, Any]] = outbound_consumer_logs[0][
+                "samples"
+            ]
             assert_that(
                 DeepDiff(
                     outbound_samples,
