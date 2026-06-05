@@ -2,13 +2,16 @@ import uuid
 from datetime import datetime, UTC, timedelta
 from decimal import Decimal
 from typing import MutableMapping, Any
+from unittest.mock import AsyncMock
 
+import pytest
 from aio_pika.abc import HeadersType
 from assertpy import assert_that
 from deepdiff import DeepDiff
 from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 from httpx import Response
+from pytest_mock import MockerFixture
 from tenacity import Retrying, stop_after_delay, wait_fixed
 
 from app.config import Settings
@@ -19,10 +22,16 @@ PUBLISH_INBOUND_ENDPOINT = "/context/test-support/publish-inbound-messages"
 PUBLISH_BULK_INBOUND_ENDPOINT = "/context/test-support/publish-bulk-inbound-messages"
 
 
+@pytest.fixture
+def mock_publish_to_outbound(mocker: MockerFixture) -> AsyncMock:
+    mock: AsyncMock = mocker.patch("app.consumer.inbound_consumer.publish_to_outbound")
+    return mock
+
+
 def test_publish_inbound_message(
-    enable_test_components: Settings,
-    test_client: TestClient,
-    captured_logs: list[MutableMapping[str, Any]],
+        enable_test_components: Settings,
+        test_client: TestClient,
+        captured_logs: list[MutableMapping[str, Any]],
 ):
     sample1: Sample = Sample(
         id=uuid.uuid4(),
@@ -57,7 +66,7 @@ def test_publish_inbound_message(
     assert_that(publish_response.status_code).is_equal_to(204)
 
     for attempt in Retrying(
-        stop=stop_after_delay(5), wait=wait_fixed(0.5), reraise=True
+            stop=stop_after_delay(5), wait=wait_fixed(0.5), reraise=True
     ):
         with attempt:
             assert_that(len(captured_logs)).is_greater_than(0)
@@ -93,10 +102,76 @@ def test_publish_inbound_message(
             ).is_empty()
 
 
+def test_publish_inbound_message_publishes_to_retry_queue_on_exception(
+        enable_test_components: Settings,
+        mock_publish_to_outbound: AsyncMock,
+        test_client: TestClient,
+        captured_logs: list[MutableMapping[str, Any]],
+):
+    mock_publish_to_outbound.side_effect = [ValueError("First failure"), None]
+    sample1: Sample = Sample(
+        id=uuid.uuid4(),
+        username=f"user-{uuid.uuid4()}",
+        bool_field=True,
+        float_field=2.0,
+        decimal_field=Decimal("3.1"),
+        created_datetime=datetime.now(UTC),
+        updated_datetime=datetime.now(UTC),
+        version=1,
+    )
+    samples: list[Sample] = [sample1]
+    headers: dict[str, Any] = {
+        "test": "value",
+        "intValue": 2,
+        "datetime": datetime.now(UTC).isoformat(),
+    }
+    message: InboundMessage = InboundMessage(samples=samples, headers=headers)
+    publish_response: Response = test_client.post(
+        PUBLISH_INBOUND_ENDPOINT, json=jsonable_encoder(message)
+    )
+    assert_that(publish_response.status_code).is_equal_to(204)
+
+    for attempt in Retrying(
+            stop=stop_after_delay(5), wait=wait_fixed(0.5), reraise=True
+    ):
+        with attempt:
+            assert_that(len(captured_logs)).is_greater_than(0)
+            retry_consumer_logs = list(
+                filter(
+                    lambda entry: str(entry["event"]).startswith(
+                        "Processed retry message"
+                    ),
+                    captured_logs,
+                )
+            )
+            assert_that(retry_consumer_logs).is_length(1)
+            retry_headers: HeadersType = retry_consumer_logs[0]["headers"]
+            assert_that(retry_headers.get("test")).is_equal_to(headers.get("test"))
+            assert_that(retry_headers.get("intValue")).is_equal_to(
+                headers.get("intValue")
+            )
+            assert_that(
+                datetime.fromisoformat(retry_headers.get("datetime"))
+            ).is_between(
+                datetime.now(UTC) - timedelta(seconds=5),
+                datetime.now(UTC) + timedelta(seconds=5),
+            )
+            outbound_samples: list[dict[str, Any]] = retry_consumer_logs[0][
+                "samples"
+            ]
+            assert_that(
+                DeepDiff(
+                    outbound_samples,
+                    jsonable_encoder(samples),
+                    ignore_order=True,
+                )
+            ).is_empty()
+
+
 def test_publish_bulk_inbound_message(
-    enable_test_components: Settings,
-    test_client: TestClient,
-    captured_logs: list[MutableMapping[str, Any]],
+        enable_test_components: Settings,
+        test_client: TestClient,
+        captured_logs: list[MutableMapping[str, Any]],
 ):
     count: int = 2
     publish_bulk_response: Response = test_client.get(
@@ -105,7 +180,7 @@ def test_publish_bulk_inbound_message(
     assert_that(publish_bulk_response.status_code).is_equal_to(204)
 
     for attempt in Retrying(
-        stop=stop_after_delay(5), wait=wait_fixed(0.5), reraise=True
+            stop=stop_after_delay(5), wait=wait_fixed(0.5), reraise=True
     ):
         with attempt:
             assert_that(len(captured_logs)).is_greater_than(0)

@@ -63,7 +63,7 @@ async def configure_rabbitmq():
 
         await inbound_retry_queue.bind(
             inbound_retry_exchange,
-            routing_key=settings.app_rabbit_inbound_retry_exchange,
+            routing_key=settings.app_rabbit_inbound_retry_routing_key,
         )
 
         inbound_retry_dead_queue = await channel.declare_queue(
