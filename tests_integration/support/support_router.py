@@ -1,4 +1,5 @@
 import asyncio
+import json
 import uuid
 from datetime import datetime, UTC
 
@@ -30,7 +31,7 @@ async def get_handler() -> Resp:
 @router.post("/publish-inbound-messages", status_code=204)
 async def publish_inbound_messages_handler(message: InboundMessage) -> None:
     logger = structlog.get_logger()
-    await publish_to_inbound(message.samples, headers=message.headers)
+    await publish_to_inbound(payload_string=json.dumps(jsonable_encoder(message.samples)), headers=message.headers)
     logger.info(f"Published {len(message.samples)} message(s) to inbound queue")
     return
 
@@ -61,7 +62,7 @@ async def publish_bulk_inbound_messages_handler(
                 updated_datetime=datetime.now(UTC),
                 version=1,
             )
-            await publish_to_inbound([message])
+            await publish_to_inbound(json.dumps(jsonable_encoder([message])))
             logger.info(f"Published index {index}")
         finally:
             if use_throttle:
