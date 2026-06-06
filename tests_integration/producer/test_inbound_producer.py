@@ -17,6 +17,7 @@ from tenacity import Retrying, stop_after_delay, wait_fixed
 
 from app.config import Settings
 from app.model.response.sample import Sample
+from app.producer.outbound_producer import publish_to_outbound
 from tests_integration.support.model.inbound_message import InboundMessage
 
 PUBLISH_INBOUND_ENDPOINT = "/context/test-support/publish-inbound-messages"
@@ -103,13 +104,23 @@ def test_publish_inbound_message(
             ).is_empty()
 
 
-def test_publish_inbound_message_publishes_to_retry_queue_on_exception(
+def test_publish_inbound_message_publishes_to_retries_and_succeeds_on_last_attempt(
     enable_test_components: Settings,
     mock_publish_to_outbound: AsyncMock,
     test_client: TestClient,
     captured_logs: list[MutableMapping[str, Any]],
 ):
-    mock_publish_to_outbound.side_effect = [ValueError("First failure"), None]
+    def side_effect_logic(*args, **kwargs):
+        if mock_publish_to_outbound.call_count == 1:
+            raise ValueError("First failure")
+        if mock_publish_to_outbound.call_count == 2:
+            raise TypeError("Second failure")
+
+        # Call 3 and all future calls fall back to the real thing
+        return publish_to_outbound(*args, **kwargs)
+
+    mock_publish_to_outbound.side_effect = side_effect_logic
+
     sample1: Sample = Sample(
         id=uuid.uuid4(),
         username=f"user-{uuid.uuid4()}",
@@ -141,12 +152,12 @@ def test_publish_inbound_message_publishes_to_retry_queue_on_exception(
             retry_consumer_logs = list(
                 filter(
                     lambda entry: str(entry["event"]).startswith(
-                        "Processed retry message"
+                        "Sent to inbound queue"
                     ),
                     captured_logs,
                 )
             )
-            assert_that(retry_consumer_logs).is_length(1)
+            assert_that(retry_consumer_logs).is_length(2)
             retry_headers: HeadersType = retry_consumer_logs[0]["headers"]
             assert_that(retry_headers.get("test")).is_equal_to(headers.get("test"))
             assert_that(retry_headers.get("message_id")).is_equal_to(

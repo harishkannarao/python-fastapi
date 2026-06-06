@@ -25,11 +25,16 @@ async def process_retry_message_task(message: AbstractIncomingMessage):
         next_retry: datetime = datetime.fromisoformat(headers.get("next_retry"))
         current_datetime = datetime.now(UTC)
         if (
-            count <= settings.app_rabbit_mq_max_retries
+            count <= settings.app_rabbit_inbound_max_retry
             and next_retry <= current_datetime
         ):
             await publish_to_inbound(payload_string=payload_string, headers=headers)
-        elif count <= settings.app_rabbit_mq_max_retries and next_retry > datetime.now(
+            logger.info(
+                f"Sent to inbound queue {payload_string}",
+                headers=headers,
+                payload_string=payload_string,
+            )
+        elif count <= settings.app_rabbit_inbound_max_retry and next_retry > datetime.now(
             UTC
         ):
             await publish_to_inbound_retry(
