@@ -1,12 +1,9 @@
 import asyncio
-import json
 from _asyncio import Task
 
 import structlog
-from aio_pika.abc import AbstractIncomingMessage, HeadersType
-from fastapi.encoders import jsonable_encoder
+from aio_pika.abc import AbstractIncomingMessage
 
-from app.model.response.sample import Sample
 from app.rabbit_mq.rabbit_mq_client import get_connection
 from app.config import settings
 

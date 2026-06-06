@@ -30,9 +30,9 @@ def mock_publish_to_outbound(mocker: MockerFixture) -> AsyncMock:
 
 
 def test_publish_inbound_message(
-        enable_test_components: Settings,
-        test_client: TestClient,
-        captured_logs: list[MutableMapping[str, Any]],
+    enable_test_components: Settings,
+    test_client: TestClient,
+    captured_logs: list[MutableMapping[str, Any]],
 ):
     sample1: Sample = Sample(
         id=uuid.uuid4(),
@@ -67,7 +67,7 @@ def test_publish_inbound_message(
     assert_that(publish_response.status_code).is_equal_to(204)
 
     for attempt in Retrying(
-            stop=stop_after_delay(5), wait=wait_fixed(0.5), reraise=True
+        stop=stop_after_delay(5), wait=wait_fixed(0.5), reraise=True
     ):
         with attempt:
             assert_that(len(captured_logs)).is_greater_than(0)
@@ -104,10 +104,10 @@ def test_publish_inbound_message(
 
 
 def test_publish_inbound_message_publishes_to_retry_queue_on_exception(
-        enable_test_components: Settings,
-        mock_publish_to_outbound: AsyncMock,
-        test_client: TestClient,
-        captured_logs: list[MutableMapping[str, Any]],
+    enable_test_components: Settings,
+    mock_publish_to_outbound: AsyncMock,
+    test_client: TestClient,
+    captured_logs: list[MutableMapping[str, Any]],
 ):
     mock_publish_to_outbound.side_effect = [ValueError("First failure"), None]
     sample1: Sample = Sample(
@@ -125,7 +125,7 @@ def test_publish_inbound_message_publishes_to_retry_queue_on_exception(
         "test": "value",
         "int_value": 2,
         "datetime": datetime.now(UTC).isoformat(),
-        "message_id": str(uuid.uuid4())
+        "message_id": str(uuid.uuid4()),
     }
     message: InboundMessage = InboundMessage(samples=samples, headers=headers)
     publish_response: Response = test_client.post(
@@ -134,7 +134,7 @@ def test_publish_inbound_message_publishes_to_retry_queue_on_exception(
     assert_that(publish_response.status_code).is_equal_to(204)
 
     for attempt in Retrying(
-            stop=stop_after_delay(5), wait=wait_fixed(0.5), reraise=True
+        stop=stop_after_delay(5), wait=wait_fixed(0.5), reraise=True
     ):
         with attempt:
             assert_that(len(captured_logs)).is_greater_than(0)
@@ -149,7 +149,9 @@ def test_publish_inbound_message_publishes_to_retry_queue_on_exception(
             assert_that(retry_consumer_logs).is_length(1)
             retry_headers: HeadersType = retry_consumer_logs[0]["headers"]
             assert_that(retry_headers.get("test")).is_equal_to(headers.get("test"))
-            assert_that(retry_headers.get("message_id")).is_equal_to(headers.get("message_id"))
+            assert_that(retry_headers.get("message_id")).is_equal_to(
+                headers.get("message_id")
+            )
             assert_that(retry_headers.get("int_value")).is_equal_to(
                 headers.get("int_value")
             )
@@ -171,9 +173,9 @@ def test_publish_inbound_message_publishes_to_retry_queue_on_exception(
 
 
 def test_publish_bulk_inbound_message(
-        enable_test_components: Settings,
-        test_client: TestClient,
-        captured_logs: list[MutableMapping[str, Any]],
+    enable_test_components: Settings,
+    test_client: TestClient,
+    captured_logs: list[MutableMapping[str, Any]],
 ):
     count: int = 2
     publish_bulk_response: Response = test_client.get(
@@ -182,7 +184,7 @@ def test_publish_bulk_inbound_message(
     assert_that(publish_bulk_response.status_code).is_equal_to(204)
 
     for attempt in Retrying(
-            stop=stop_after_delay(5), wait=wait_fixed(0.5), reraise=True
+        stop=stop_after_delay(5), wait=wait_fixed(0.5), reraise=True
     ):
         with attempt:
             assert_that(len(captured_logs)).is_greater_than(0)
