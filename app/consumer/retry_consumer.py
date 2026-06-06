@@ -15,7 +15,7 @@ async def process_retry_message_task(message: AbstractIncomingMessage):
     logger = structlog.get_logger()
     async with message.process():  # Automatically ACKs if no exception occurs
         payload_string: str = message.body.decode()
-        headers: HeadersType = message.headers
+        headers = dict(message.headers) if message.headers else {}
         logger.info(
             f"Received retry message {payload_string}",
             payload=payload_string,

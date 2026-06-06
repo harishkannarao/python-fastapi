@@ -20,9 +20,9 @@ from app.rabbit_mq.rabbit_mq_client import get_connection
 async def process_inbound_message_task(message: AbstractIncomingMessage):
     logger = structlog.get_logger()
     async with message.process():  # Automatically ACKs if no exception occurs
+        payload_string: str = message.body.decode()
+        headers = dict(message.headers) if message.headers else {}
         try:
-            payload_string: str = message.body.decode()
-            headers = dict(message.headers) if message.headers else {}
             count: int = headers.get("count", 1)
             message_id: str = headers.get("message_id", str(uuid.uuid4()))
             message_context: dict[str, Any] = {"message_id": message_id, "count": count}
@@ -45,23 +45,16 @@ async def process_inbound_message_task(message: AbstractIncomingMessage):
                 payload_string=payload_string,
                 headers=headers,
             )
-            if samples is None:
-                logger.error(
-                    f"Unable to parse raw payload {payload_string}",
-                    payload_string=payload_string,
-                    headers=headers,
-                )
-            else:
-                updated_count = count + 1
-                exponent: float = math.pow(settings.app_rabbit_inbound_retry_multiplication_factor, updated_count)
-                next_retry_seconds: float = settings.app_rabbit_inbound_retry_interval_in_seconds * exponent
-                next_retry: datetime = datetime.now(UTC) + timedelta(seconds=next_retry_seconds)
-                headers.update(
-                    {"count": updated_count,
-                     "next_retry": next_retry.isoformat(),
-                     "message_id": message_id}
-                )
-                await publish_to_inbound_retry(samples=samples, headers=headers)
+            updated_count = count + 1
+            exponent: float = math.pow(settings.app_rabbit_inbound_retry_multiplication_factor, updated_count)
+            next_retry_seconds: float = settings.app_rabbit_inbound_retry_interval_in_seconds * exponent
+            next_retry: datetime = datetime.now(UTC) + timedelta(seconds=next_retry_seconds)
+            headers.update({
+                "count": updated_count,
+                "next_retry": next_retry.isoformat(),
+                "message_id": message_id
+            })
+            await publish_to_inbound_retry(payload_string=payload_string, headers=headers)
         finally:
             structlog.contextvars.clear_contextvars()
 
