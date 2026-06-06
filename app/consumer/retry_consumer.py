@@ -21,11 +21,10 @@ async def process_retry_message_task(message: AbstractIncomingMessage):
             payload=payload_string,
             headers=headers,
         )
-        samples = [Sample(**item) for item in json.loads(payload_string)]
         logger.info(
             f"Processed retry message {payload_string}",
             headers=headers,
-            samples=jsonable_encoder(samples),
+            payload_string=payload_string,
         )
 
 

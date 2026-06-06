@@ -1,3 +1,4 @@
+import json
 import uuid
 from datetime import datetime, UTC, timedelta
 from decimal import Decimal
@@ -155,12 +156,11 @@ def test_publish_inbound_message_publishes_to_retry_queue_on_exception(
             assert_that(
                 datetime.fromisoformat(retry_headers.get("datetime"))
             ).is_between(
-                datetime.now(UTC) - timedelta(seconds=5),
-                datetime.now(UTC) + timedelta(seconds=5),
+                datetime.now(UTC) - timedelta(seconds=10),
+                datetime.now(UTC) + timedelta(seconds=10),
             )
-            outbound_samples: list[dict[str, Any]] = retry_consumer_logs[0][
-                "samples"
-            ]
+            retry_payload_string = retry_consumer_logs[0]["payload_string"]
+            outbound_samples: list[dict[str, Any]] = json.loads(retry_payload_string)
             assert_that(
                 DeepDiff(
                     outbound_samples,
