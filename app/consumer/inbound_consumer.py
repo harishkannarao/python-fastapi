@@ -1,7 +1,9 @@
 import asyncio
 import json
+import math
 import uuid
 from _asyncio import Task
+from datetime import datetime, timedelta, UTC
 from typing import Any
 
 import structlog
@@ -50,7 +52,15 @@ async def process_inbound_message_task(message: AbstractIncomingMessage):
                     headers=headers,
                 )
             else:
-                headers.update({"count": count + 1, "message_id": message_id})
+                updated_count = count + 1
+                exponent: float = math.pow(settings.app_rabbit_inbound_retry_multiplication_factor, updated_count)
+                next_retry_seconds: float = settings.app_rabbit_inbound_retry_interval_in_seconds * exponent
+                next_retry: datetime = datetime.now(UTC) + timedelta(seconds=next_retry_seconds)
+                headers.update(
+                    {"count": updated_count,
+                     "next_retry": next_retry.isoformat(),
+                     "message_id": message_id}
+                )
                 await publish_to_inbound_retry(samples=samples, headers=headers)
         finally:
             structlog.contextvars.clear_contextvars()

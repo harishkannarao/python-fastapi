@@ -56,7 +56,7 @@ def test_publish_inbound_message(
     samples: list[Sample] = [sample1, sample2]
     headers: dict[str, Any] = {
         "test": "value",
-        "intValue": 2,
+        "int_value": 2,
         "datetime": datetime.now(UTC).isoformat(),
     }
     message: InboundMessage = InboundMessage(samples=samples, headers=headers)
@@ -81,8 +81,8 @@ def test_publish_inbound_message(
             assert_that(outbound_consumer_logs).is_length(1)
             outbound_headers: HeadersType = outbound_consumer_logs[0]["headers"]
             assert_that(outbound_headers.get("test")).is_equal_to(headers.get("test"))
-            assert_that(outbound_headers.get("intValue")).is_equal_to(
-                headers.get("intValue")
+            assert_that(outbound_headers.get("int_value")).is_equal_to(
+                headers.get("int_value")
             )
             assert_that(
                 datetime.fromisoformat(outbound_headers.get("datetime"))
@@ -122,8 +122,9 @@ def test_publish_inbound_message_publishes_to_retry_queue_on_exception(
     samples: list[Sample] = [sample1]
     headers: dict[str, Any] = {
         "test": "value",
-        "intValue": 2,
+        "int_value": 2,
         "datetime": datetime.now(UTC).isoformat(),
+        "message_id": str(uuid.uuid4())
     }
     message: InboundMessage = InboundMessage(samples=samples, headers=headers)
     publish_response: Response = test_client.post(
@@ -147,8 +148,9 @@ def test_publish_inbound_message_publishes_to_retry_queue_on_exception(
             assert_that(retry_consumer_logs).is_length(1)
             retry_headers: HeadersType = retry_consumer_logs[0]["headers"]
             assert_that(retry_headers.get("test")).is_equal_to(headers.get("test"))
-            assert_that(retry_headers.get("intValue")).is_equal_to(
-                headers.get("intValue")
+            assert_that(retry_headers.get("message_id")).is_equal_to(headers.get("message_id"))
+            assert_that(retry_headers.get("int_value")).is_equal_to(
+                headers.get("int_value")
             )
             assert_that(
                 datetime.fromisoformat(retry_headers.get("datetime"))

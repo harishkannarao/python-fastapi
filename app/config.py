@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     app_rabbit_inbound_exchange: str = "in-bound-ex"
     app_rabbit_inbound_routing_key: str = "in-bound-rk"
     app_rabbit_inbound_max_retry: int = 3
+    app_rabbit_inbound_retry_multiplication_factor: float = 1.1
     app_rabbit_inbound_retry_interval_in_seconds: int = 1
 
     app_rabbit_inbound_retry_queue: str = "in-bound-retry-queue"
