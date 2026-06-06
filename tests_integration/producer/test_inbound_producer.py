@@ -134,7 +134,7 @@ def test_publish_inbound_message_publishes_to_retry_queue_on_exception(
     assert_that(publish_response.status_code).is_equal_to(204)
 
     for attempt in Retrying(
-        stop=stop_after_delay(5), wait=wait_fixed(0.5), reraise=True
+        stop=stop_after_delay(15), wait=wait_fixed(0.5), reraise=True
     ):
         with attempt:
             assert_that(len(captured_logs)).is_greater_than(0)

@@ -39,7 +39,7 @@ ruff:
 	uv run ruff format
 
 flake8:
-	uv run flake8 --ignore=E501 --exclude=.venv,.git # ignore max line length
+	uv run flake8 --ignore=E501,W503 --exclude=.venv,.git # ignore max line length
 
 run_all:
 	make init ruff flake8 tests_unit tests_integration

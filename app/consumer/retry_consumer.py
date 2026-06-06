@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime, UTC
 from _asyncio import Task
 
 import structlog
@@ -6,6 +7,8 @@ from aio_pika.abc import AbstractIncomingMessage
 
 from app.rabbit_mq.rabbit_mq_client import get_connection
 from app.config import settings
+from app.producer.inbound_retry_producer import publish_to_inbound_retry
+from app.producer.inbound_producer import publish_to_inbound
 
 
 async def process_retry_message_task(message: AbstractIncomingMessage):
@@ -18,6 +21,26 @@ async def process_retry_message_task(message: AbstractIncomingMessage):
             payload=payload_string,
             headers=headers,
         )
+        count: int = headers.get("count")
+        next_retry: datetime = datetime.fromisoformat(headers.get("next_retry"))
+        current_datetime = datetime.now(UTC)
+        if (
+            count <= settings.app_rabbit_mq_max_retries
+            and next_retry <= current_datetime
+        ):
+            await publish_to_inbound(payload_string=payload_string, headers=headers)
+        elif count <= settings.app_rabbit_mq_max_retries and next_retry > datetime.now(
+            UTC
+        ):
+            await publish_to_inbound_retry(
+                payload_string=payload_string, headers=headers
+            )
+        else:
+            logger.info(
+                f"Max retries exhausted, discarding message {payload_string}",
+                payload=payload_string,
+                headers=headers,
+            )
         logger.info(
             f"Processed retry message {payload_string}",
             headers=headers,
