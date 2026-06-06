@@ -17,7 +17,6 @@ from tenacity import Retrying, stop_after_delay, wait_fixed
 
 from app.config import Settings
 from app.model.response.sample import Sample
-from app.producer.outbound_producer import publish_to_outbound
 from tests_integration.support.model.inbound_message import InboundMessage
 
 PUBLISH_INBOUND_ENDPOINT = "/context/test-support/publish-inbound-messages"
@@ -110,16 +109,11 @@ def test_publish_inbound_message_publishes_to_retries_and_succeeds_on_last_attem
     test_client: TestClient,
     captured_logs: list[MutableMapping[str, Any]],
 ):
-    def side_effect_logic(*args, **kwargs):
-        if mock_publish_to_outbound.call_count == 1:
-            raise ValueError("First failure")
-        if mock_publish_to_outbound.call_count == 2:
-            raise TypeError("Second failure")
-
-        # Call 3 and all future calls fall back to the real thing
-        return publish_to_outbound(*args, **kwargs)
-
-    mock_publish_to_outbound.side_effect = side_effect_logic
+    mock_publish_to_outbound.side_effect = [
+        ValueError("First failure"),
+        ValueError("Second failure"),
+        None,
+    ]
 
     sample1: Sample = Sample(
         id=uuid.uuid4(),
@@ -181,6 +175,16 @@ def test_publish_inbound_message_publishes_to_retries_and_succeeds_on_last_attem
                     ignore_order=True,
                 )
             ).is_empty()
+
+    for attempt in Retrying(
+        stop=stop_after_delay(5), wait=wait_fixed(0.5), reraise=True
+    ):
+        with attempt:
+            assert_that(mock_publish_to_outbound.call_count).is_equal_to(3)
+
+    assert_that(
+        mock_publish_to_outbound.call_args_list[2].kwargs["samples"]
+    ).is_equal_to(samples)
 
 
 def test_publish_bulk_inbound_message(

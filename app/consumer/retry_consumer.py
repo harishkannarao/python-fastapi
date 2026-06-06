@@ -34,8 +34,9 @@ async def process_retry_message_task(message: AbstractIncomingMessage):
                 headers=headers,
                 payload_string=payload_string,
             )
-        elif count <= settings.app_rabbit_inbound_max_retry and next_retry > datetime.now(
-            UTC
+        elif (
+            count <= settings.app_rabbit_inbound_max_retry
+            and next_retry > datetime.now(UTC)
         ):
             await publish_to_inbound_retry(
                 payload_string=payload_string, headers=headers
