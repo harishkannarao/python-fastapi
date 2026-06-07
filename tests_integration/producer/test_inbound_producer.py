@@ -29,6 +29,12 @@ def mock_publish_to_outbound(mocker: MockerFixture) -> AsyncMock:
     return mock
 
 
+@pytest.fixture
+def mock_publish_to_inbound_retry(mocker: MockerFixture) -> AsyncMock:
+    mock: AsyncMock = mocker.patch("app.consumer.inbound_consumer.publish_to_inbound_retry")
+    return mock
+
+
 def test_publish_inbound_message(
     enable_test_components: Settings,
     test_client: TestClient,
@@ -256,6 +262,58 @@ def test_publish_inbound_message_exhausts_after_max_retries(
         with attempt:
             assert_that(mock_publish_to_outbound.call_count).is_equal_to(3)
 
+
+def test_publish_inbound_message_sent_to_dlq_if_publish_to_retry_fails(
+    enable_test_components: Settings,
+    mock_publish_to_outbound: AsyncMock,
+    mock_publish_to_inbound_retry: AsyncMock,
+    test_client: TestClient,
+    captured_logs: list[MutableMapping[str, Any]],
+):
+    mock_publish_to_outbound.side_effect = ValueError("Dummy failure")
+    mock_publish_to_inbound_retry.side_effect = ValueError("Another Dummy failure")
+
+    sample1: Sample = Sample(
+        id=uuid.uuid4(),
+        username=f"user-{uuid.uuid4()}",
+        bool_field=True,
+        float_field=2.0,
+        decimal_field=Decimal("3.1"),
+        created_datetime=datetime.now(UTC),
+        updated_datetime=datetime.now(UTC),
+        version=1,
+    )
+    samples: list[Sample] = [sample1]
+    headers: dict[str, Any] = {
+        "message_id": str(uuid.uuid4()),
+    }
+    message: InboundMessage = InboundMessage(samples=samples, headers=headers)
+    publish_response: Response = test_client.post(
+        PUBLISH_INBOUND_ENDPOINT, json=jsonable_encoder(message)
+    )
+    assert_that(publish_response.status_code).is_equal_to(204)
+
+    for attempt in Retrying(
+        stop=stop_after_delay(5), wait=wait_fixed(0.5), reraise=True
+    ):
+        with attempt:
+            assert_that(mock_publish_to_outbound.call_count).is_equal_to(1)
+            assert_that(mock_publish_to_inbound_retry.call_count).is_equal_to(1)
+
+            assert_that(len(captured_logs)).is_greater_than(0)
+            inbound_retry_logs = list(
+                filter(
+                    lambda entry: str(entry["event"]).startswith(
+                        "Received inbound dlq message"
+                    ),
+                    captured_logs,
+                )
+            )
+            assert_that(inbound_retry_logs).is_length(1)
+            retry_headers: HeadersType = inbound_retry_logs[0]["headers"]
+            assert_that(retry_headers.get("message_id")).is_equal_to(
+                headers.get("message_id")
+            )
 
 
 def test_publish_bulk_inbound_message(
