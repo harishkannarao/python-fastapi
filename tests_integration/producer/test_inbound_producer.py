@@ -198,6 +198,65 @@ def test_publish_inbound_message_publishes_to_retries_and_succeeds_on_last_attem
         mock_publish_to_outbound.call_args_list[2].kwargs["samples"]
     ).is_equal_to(samples)
 
+def test_publish_inbound_message_exhausts_after_max_retries(
+    enable_test_components: Settings,
+    mock_publish_to_outbound: AsyncMock,
+    test_client: TestClient,
+    captured_logs: list[MutableMapping[str, Any]],
+):
+    mock_publish_to_outbound.side_effect = ValueError("Dummy failure")
+
+    sample1: Sample = Sample(
+        id=uuid.uuid4(),
+        username=f"user-{uuid.uuid4()}",
+        bool_field=True,
+        float_field=2.0,
+        decimal_field=Decimal("3.1"),
+        created_datetime=datetime.now(UTC),
+        updated_datetime=datetime.now(UTC),
+        version=1,
+    )
+    samples: list[Sample] = [sample1]
+    headers: dict[str, Any] = {
+        "message_id": str(uuid.uuid4()),
+    }
+    message: InboundMessage = InboundMessage(samples=samples, headers=headers)
+    publish_response: Response = test_client.post(
+        PUBLISH_INBOUND_ENDPOINT, json=jsonable_encoder(message)
+    )
+    assert_that(publish_response.status_code).is_equal_to(204)
+
+    for attempt in Retrying(
+        stop=stop_after_delay(15), wait=wait_fixed(0.5), reraise=True
+    ):
+        with attempt:
+            assert_that(len(captured_logs)).is_greater_than(0)
+            retry_sent_to_inbound_logs = list(
+                filter(
+                    lambda entry: str(entry["event"]).startswith(
+                        "Sent to inbound queue"
+                    ),
+                    captured_logs,
+                )
+            )
+            assert_that(retry_sent_to_inbound_logs).is_length(2)
+            retry_exhausted_logs = list(
+                filter(
+                    lambda entry: str(entry["event"]).startswith(
+                        "Max retries exhausted, discarding message"
+                    ),
+                    captured_logs,
+                )
+            )
+            assert_that(retry_exhausted_logs).is_length(1)
+
+    for attempt in Retrying(
+        stop=stop_after_delay(5), wait=wait_fixed(0.5), reraise=True
+    ):
+        with attempt:
+            assert_that(mock_publish_to_outbound.call_count).is_equal_to(3)
+
+
 
 def test_publish_bulk_inbound_message(
     enable_test_components: Settings,
