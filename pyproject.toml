@@ -18,6 +18,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "flake8",
+    "httpx2",
     "pytest",
     "pytest-mock",
     "pytest-html",
