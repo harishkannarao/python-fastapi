@@ -90,12 +90,17 @@ async def lifespan(_app: FastAPI):
                 from tests_integration.support.inbound_dlq_consumer import (
                     start_inbound_dlq_consumer as inbound_dlq_consumer,
                 )
+                from tests_integration.support.inbound_retry_dlq_consumer import (
+                    start_inbound_retry_dlq_consumer as inbound_retry_dlq_consumer,
+                )
 
                 consumer_tasks.append(await outbound_consumer())
                 consumer_tasks.append(await inbound_dlq_consumer())
+                consumer_tasks.append(await inbound_retry_dlq_consumer())
             except ImportError as test_consumer_import_error:
                 outbound_consumer = None
                 inbound_dlq_consumer = None
+                inbound_retry_dlq_consumer = None
                 logger.warning(
                     f"Test Consumer ImportError!: {repr(test_consumer_import_error)}"
                 )
