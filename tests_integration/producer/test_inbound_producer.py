@@ -109,11 +109,15 @@ def test_publish_inbound_message_publishes_to_retries_and_succeeds_on_last_attem
     test_client: TestClient,
     captured_logs: list[MutableMapping[str, Any]],
 ):
-    mock_publish_to_outbound.side_effect = [
-        ValueError("First failure"),
-        ValueError("Second failure"),
-        None,
-    ]
+    async def publish_outbound_side_effect_logic(*args, **kwargs):
+        if mock_publish_to_outbound.call_count == 1:
+            raise ValueError("First failure")
+        if mock_publish_to_outbound.call_count == 2:
+            raise TypeError("Second failure")
+        # Call 3 and all future calls fall back to returning None
+        return None
+
+    mock_publish_to_outbound.side_effect = publish_outbound_side_effect_logic
 
     sample1: Sample = Sample(
         id=uuid.uuid4(),
