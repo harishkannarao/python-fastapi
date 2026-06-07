@@ -31,7 +31,9 @@ def mock_publish_to_outbound(mocker: MockerFixture) -> AsyncMock:
 
 @pytest.fixture
 def mock_publish_to_inbound_retry(mocker: MockerFixture) -> AsyncMock:
-    mock: AsyncMock = mocker.patch("app.consumer.inbound_consumer.publish_to_inbound_retry")
+    mock: AsyncMock = mocker.patch(
+        "app.consumer.inbound_consumer.publish_to_inbound_retry"
+    )
     return mock
 
 
@@ -203,6 +205,7 @@ def test_publish_inbound_message_publishes_to_retries_and_succeeds_on_last_attem
     assert_that(
         mock_publish_to_outbound.call_args_list[2].kwargs["samples"]
     ).is_equal_to(samples)
+
 
 def test_publish_inbound_message_exhausts_after_max_retries(
     enable_test_components: Settings,
