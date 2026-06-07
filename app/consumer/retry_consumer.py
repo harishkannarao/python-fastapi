@@ -12,11 +12,11 @@ from app.producer.inbound_producer import publish_to_inbound
 
 
 async def process_retry_message_task(message: AbstractIncomingMessage):
-    logger = structlog.get_logger()
+    logger = structlog.get_logger("retry_consumer")
     async with message.process():  # Automatically ACKs if no exception occurs
         payload_string: str = message.body.decode()
         headers = dict(message.headers) if message.headers else {}
-        logger.info(
+        logger.debug(
             f"Received retry message {payload_string}",
             payload=payload_string,
             headers=headers,
@@ -41,17 +41,17 @@ async def process_retry_message_task(message: AbstractIncomingMessage):
             await publish_to_inbound_retry(
                 payload_string=payload_string, headers=headers
             )
+            logger.debug(
+                f"Sent to retry queue {payload_string}",
+                headers=headers,
+                payload_string=payload_string,
+            )
         else:
             logger.info(
                 f"Max retries exhausted, discarding message {payload_string}",
                 payload=payload_string,
                 headers=headers,
             )
-        logger.info(
-            f"Processed retry message {payload_string}",
-            headers=headers,
-            payload_string=payload_string,
-        )
 
 
 async def start_retry_consumer() -> Task[str]:

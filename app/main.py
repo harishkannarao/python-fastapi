@@ -41,7 +41,7 @@ from app.consumer.inbound_consumer import start_inbound_consumer
 from app.consumer.retry_consumer import start_retry_consumer
 
 # Initialize logging at application startup
-setup_logging(json_logs=settings.app_json_logs, db_logs=settings.app_db_log_sql)
+setup_logging(settings)
 logger = structlog.get_logger()
 
 context = FastAPI(openapi_url=settings.app_open_api_url)

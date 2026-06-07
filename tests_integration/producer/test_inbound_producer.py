@@ -147,7 +147,7 @@ def test_publish_inbound_message_publishes_to_retries_and_succeeds_on_last_attem
     ):
         with attempt:
             assert_that(len(captured_logs)).is_greater_than(0)
-            retry_consumer_logs = list(
+            retry_sent_to_inbound_logs = list(
                 filter(
                     lambda entry: str(entry["event"]).startswith(
                         "Sent to inbound queue"
@@ -155,8 +155,8 @@ def test_publish_inbound_message_publishes_to_retries_and_succeeds_on_last_attem
                     captured_logs,
                 )
             )
-            assert_that(retry_consumer_logs).is_length(2)
-            retry_headers: HeadersType = retry_consumer_logs[0]["headers"]
+            assert_that(retry_sent_to_inbound_logs).is_length(2)
+            retry_headers: HeadersType = retry_sent_to_inbound_logs[0]["headers"]
             assert_that(retry_headers.get("test")).is_equal_to(headers.get("test"))
             assert_that(retry_headers.get("message_id")).is_equal_to(
                 headers.get("message_id")
@@ -170,7 +170,7 @@ def test_publish_inbound_message_publishes_to_retries_and_succeeds_on_last_attem
                 datetime.now(UTC) - timedelta(seconds=10),
                 datetime.now(UTC) + timedelta(seconds=10),
             )
-            retry_payload_string = retry_consumer_logs[0]["payload_string"]
+            retry_payload_string = retry_sent_to_inbound_logs[0]["payload_string"]
             outbound_samples: list[dict[str, Any]] = json.loads(retry_payload_string)
             assert_that(
                 DeepDiff(
@@ -179,6 +179,14 @@ def test_publish_inbound_message_publishes_to_retries_and_succeeds_on_last_attem
                     ignore_order=True,
                 )
             ).is_empty()
+
+    retry_sent_to_retry_logs = list(
+        filter(
+            lambda entry: str(entry["event"]).startswith("Sent to retry queue"),
+            captured_logs,
+        )
+    )
+    assert_that(len(retry_sent_to_retry_logs)).is_greater_than(1)
 
     for attempt in Retrying(
         stop=stop_after_delay(5), wait=wait_fixed(0.5), reraise=True

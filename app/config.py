@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     app_db_min_con: int = 5
     app_db_max_con: int = 20
     app_db_log_sql: bool = False
+    app_retry_consumer_log_debug: bool = False
     # db settings end
 
     # rabbit mq broker settings start

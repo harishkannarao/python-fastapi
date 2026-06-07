@@ -6,8 +6,10 @@ from structlog.processors import CallsiteParameterAdder, CallsiteParameter
 from structlog.contextvars import merge_contextvars
 from structlog.stdlib import LoggerFactory
 
+from app.config import Settings
 
-def setup_logging(json_logs: bool = False, db_logs: bool = False):
+
+def setup_logging(settings: Settings):
     shared_processors = [
         CallsiteParameterAdder(
             {
@@ -22,7 +24,7 @@ def setup_logging(json_logs: bool = False, db_logs: bool = False):
         merge_contextvars,
     ]
 
-    if json_logs:
+    if settings.app_json_logs:
         log_renderer = structlog.processors.JSONRenderer()
     else:
         log_renderer = structlog.dev.ConsoleRenderer()
@@ -37,8 +39,11 @@ def setup_logging(json_logs: bool = False, db_logs: bool = False):
         handlers=[logging.StreamHandler(sys.stdout)],
     )
 
-    if db_logs:
+    if settings.app_db_log_sql:
         logging.getLogger("databases").setLevel(logging.DEBUG)
+
+    if settings.app_retry_consumer_log_debug:
+        logging.getLogger("retry_consumer").setLevel(logging.DEBUG)
 
     structlog.configure(
         processors=processors,
