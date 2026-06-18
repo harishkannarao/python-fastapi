@@ -111,3 +111,19 @@ Run the created docker image
     docker run -it --rm --network=python-fastapi-network -e 'APP_DB_HOST=python-fastapi-postgres' -e 'APP_RABBIT_MQ_HOST=python-fastapi-rabbitmq' -e 'APP_EXTERNAL_FAQ_API_BASE_URL=http://prism-mock-open-api:4010' -e 'PORT=8000' -p 8000:8000 python-fastapi
 
     http://localhost:8000
+
+### Debug application using py-spy
+
+#### Top
+To continuously monitor cpu and memory utilization using top command
+
+	sudo uv run py-spy top --pid $(ps -Aef | grep -i main.py | grep -i python | tr -s ' ' | cut -d ' ' -f3)
+
+#### Flame Graph
+To record a flame graph
+
+	sudo uv run py-spy record -o profile.svg --pid $(ps -Aef | grep -i main.py | grep -i python | tr -s ' ' | cut -d ' ' -f3)
+
+#### To dump current thread and stack trace
+
+	sudo uv run py-spy dump --pid $(ps -Aef | grep -i main.py | grep -i python | tr -s ' ' | cut -d ' ' -f3)
